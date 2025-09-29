@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /seo/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /profile
+Disallow: /bookings
+Disallow: /api/
+Sitemap: http://api.prowork.org.in/sitemap.xml

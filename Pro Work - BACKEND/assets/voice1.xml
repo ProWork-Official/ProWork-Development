@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version="2.1">
+  <form>
+    <block>
+      <audio src="http://localhost:1500/asstes/VoiceNoteTrial.mp3" />
+      <!-- <audio src="https://prowork.org.in/audio/VoiceNoteTrial.mp3" /> -->
+    </block>
+  </form>
+</vxml>

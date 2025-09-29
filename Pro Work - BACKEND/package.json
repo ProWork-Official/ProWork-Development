@@ -1,0 +1,32 @@
+{
+  "name": "pro-work---backend",
+  "version": "1.0.0",
+  "description": "This is the backend for the web application of Pro Work",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon prowork-backend.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Ayush Jaiswal",
+  "license": "ISC",
+  "dependencies": {
+    "algoliasearch": "^5.18.0",
+    "axios": "^1.9.0",
+    "cloudinary": "^2.5.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-fileupload": "^1.5.1",
+    "firebase-admin": "^13.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^6.9.16",
+    "pro-work---backend": "file:",
+    "razorpay": "^2.9.5",
+    "twilio": "^5.3.7"
+  }
+}
