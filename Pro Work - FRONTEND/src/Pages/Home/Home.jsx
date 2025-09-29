@@ -208,6 +208,7 @@ function Home() {
                   <div className="w-12 h-12 bg-[#33806b] text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">⚡</div>
                   <h3 className="text-lg font-semibold text-gray-800">Easy Scheduling</h3>
                   <p className="text-sm text-gray-600 mt-2">Book anytime, anywhere with a few simple taps.</p>
+                  {/* <p>aditya  </p> */}
                 </div>
 
               </section>
