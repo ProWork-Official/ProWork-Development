@@ -1,6 +1,6 @@
 // Package
 import { useState, useEffect, useContext } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation} from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { Toaster } from 'react-hot-toast';
 import { MyContext } from './ContextAPI';
@@ -38,10 +38,12 @@ import About from './Pages/About/About'
 import Contact from './Pages/Contact/Contact.jsx';
 import Feedback from './Pages/Feedback/Feedback.jsx';
 import Wallet from './Pages/Wallet/Wallet.jsx'
+import ChangeLocation from './Pages/ChangeLocation';
 
 
 function App() {
   const { SendOTP } = useContext(MyContext);
+  const location = useLocation();
   
   return (
     <div className='flex justify-center items-start flex-wrap'>
@@ -70,6 +72,7 @@ function App() {
           <Route path='/terms-of-service' element={<Terms/>}/>
           <Route path='/privacy-policy' element={<PrivacyPolicy/>}/>
           <Route path='/feedback' element={<Feedback/>}/>
+          <Route path='/change-location' element={<ChangeLocation/>} />
 
           <Route element={<ProtectedRoutes/>}>
             <Route path='/payment_success?' element={<Success/>}/>
