@@ -29,7 +29,7 @@ const loadScript = (src, timeout = 15000) =>
     document.head.appendChild(s);
 
     setTimeout(() => reject(new Error("Timed out loading Google Maps script")), timeout);
-  });
+});
 
 export default function LocationGate({ children }) {
   const navigate = useNavigate();
@@ -71,6 +71,10 @@ export default function LocationGate({ children }) {
               return;
             }
 
+            // console.log(`User coordinates: (${lat}, ${lng})`);
+            // console.log("Raw geocode results:", results);
+            // console.log("Geocode status:", geocodeStatus);
+
             // aggregate components from results
             const comp = {};
             for (const r of results) {
@@ -78,18 +82,20 @@ export default function LocationGate({ children }) {
                 for (const t of c.types) if (!comp[t]) comp[t] = c.long_name;
               }
             }
-
+            
+            // console.log("Geocode results:", comp);
             const norm = (s) => (s || "").toString().toLowerCase().trim();
             const state = norm(comp.administrative_area_level_1);
             const admin2 = norm(comp.administrative_area_level_2);
             const locality = norm(comp.locality);
             const sublocality = norm(comp.sublocality);
             const neighborhood = norm(comp.neighborhood);
-            const postalTown = norm(comp.postal_town);
+            const postalTown = norm(comp?.postal_town);
             const formatted = norm(results[0].formatted_address);
 
             const prayagrajNames = ["prayagraj", "allahabad"];
             const cityCandidates = [locality, admin2, sublocality, neighborhood, postalTown, formatted];
+            console.log("City candidates:", cityCandidates);
 
             const inUttarPradesh = state.includes("uttar pradesh") || state === "up";
             const inPrayagraj = cityCandidates.some(
@@ -111,6 +117,7 @@ export default function LocationGate({ children }) {
 
             if ((inUttarPradesh && inPrayagraj) || inBounds) {
               setStatus("allowed");
+              // console.log('outside')
             } else {
               setStatus("outside");
               navigate("/change-location");
@@ -164,6 +171,7 @@ export default function LocationGate({ children }) {
 
     navigator.geolocation.getCurrentPosition(onPosition, onError, { timeout: 10000 });
   }, [navigate]);
+
 
   // if already allowed or user is on /change-location, let children show
   if (status === "allowed" || location.pathname === "/change-location") {

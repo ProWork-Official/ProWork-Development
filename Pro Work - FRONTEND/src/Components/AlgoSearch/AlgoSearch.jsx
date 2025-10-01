@@ -79,7 +79,7 @@ const AlgoSearch = ({isScrolled}) => {
   }
 
   return (
-    <div id="SmallSearch" className="displayNone md:flex w-full md:w-[40%] h-screen md:h-auto fixed md:relative flex-col top-0 left-0 bg-[#fff] md:bg-transparent p-4 z-50" >
+    <div id="SmallSearch" className="displayNone lg:flex w-full md:w-[40%] h-screen md:h-auto fixed md:relative flex-col top-0 left-0 bg-[#fff] md:bg-transparent p-4 z-50" >
       <InstantSearch searchClient={searchClient} indexName="Production_Worker">
 
         {/* Mobile Search */}
@@ -99,7 +99,7 @@ const AlgoSearch = ({isScrolled}) => {
         </div>
 
         {/* Desktop Search */}
-        <div className="hidden md:flex flex-col w-full max-w-[620px] relative">
+        <div className="hidden lg:flex flex-col w-full max-w-[620px] relative">
           {/* Desktop Search Input */}
           <div ref={searchRef} className={`flex justify-between items-center bg-white shadow-md border-2 ${isScrolled ? 'border-[#33806B]' : 'border-[#f2da1d]'} rounded-full pl-4 pr-2 py-0.5 w-full`}>
             <input id="searchInput" type="text" value={query} onChange={handleSearchBoxChange} className="w-full text-gray-800 placeholder-gray-500 bg-transparen focus:outline-none" placeholder={placeholder}/>

@@ -9,7 +9,8 @@ export default {
       screens: { 
         'xs': '560px',
         'xxs': '490px',
-        'xxxs': '430px'
+        'xxxs': '430px',
+        'ssm': '640px',
       },
       backgroundImage:{
         'SignUpBtnBG': 'linear-gradient(10deg, #5f5e5f 1%,  #111111 99%)',

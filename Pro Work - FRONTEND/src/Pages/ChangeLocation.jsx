@@ -172,12 +172,16 @@ export default function ChangeLocation() {
           lng >= prayagrajBounds.west &&
           lng <= prayagrajBounds.east;
 
+          console.log("KKK")
+
         if ((inUttarPradesh && inPrayagraj) || inBounds) {
+          console.log('inside')
           // success — save selected coords and redirect
           localStorage.setItem("selected_coords", `${lat},${lng}`);
           setStatusMsg("Location saved. Redirecting...");
           setTimeout(() => navigate("/"), 400);
         } else {
+          console.log('outside')
           setStatusMsg("Selected location is outside Allahabad / Prayagraj. Pick somewhere inside the city.");
         }
       });
@@ -237,5 +241,7 @@ export default function ChangeLocation() {
         )}
       </div>
     </div>
+
+   
   );
 }
