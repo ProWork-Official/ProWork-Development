@@ -53,89 +53,92 @@ export default function LocationGate({ children }) {
 
     // shared logic to take coords and reverse-geocode & validate
     const processCoords = async (lat, lng) => {
-      try {
-        const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
-        await loadScript(src);
+  try {
+    const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+    await loadScript(src);
 
-        if (!window.google || !window.google.maps || typeof window.google.maps.Geocoder !== "function") {
-          throw new Error("Google Maps library not available after loading.");
+    if (!window.google || !window.google.maps || typeof window.google.maps.Geocoder !== "function") {
+      throw new Error("Google Maps library not available after loading.");
+    }
+
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: { lat, lng } }, (results, geocodeStatus) => {
+      console.log(results);
+      try {
+        if (geocodeStatus !== "OK" || !results || results.length === 0) {
+          setStatus("error");
+          setMessage("Reverse geocoding failed. Try again.");
+          return;
         }
 
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat, lng } }, (results, geocodeStatus) => {
-          try {
-            if (geocodeStatus !== "OK" || !results || results.length === 0) {
-              setStatus("error");
-              setMessage("Reverse geocoding failed. Try again.");
-              return;
-            }
-
-            // console.log(`User coordinates: (${lat}, ${lng})`);
-            // console.log("Raw geocode results:", results);
-            // console.log("Geocode status:", geocodeStatus);
-
-            // aggregate components from results
-            const comp = {};
-            for (const r of results) {
-              for (const c of r.address_components || []) {
-                for (const t of c.types) if (!comp[t]) comp[t] = c.long_name;
-              }
-            }
-            
-            // console.log("Geocode results:", comp);
-            const norm = (s) => (s || "").toString().toLowerCase().trim();
-            const state = norm(comp.administrative_area_level_1);
-            const admin2 = norm(comp.administrative_area_level_2);
-            const locality = norm(comp.locality);
-            const sublocality = norm(comp.sublocality);
-            const neighborhood = norm(comp.neighborhood);
-            const postalTown = norm(comp?.postal_town);
-            const formatted = norm(results[0].formatted_address);
-
-            const prayagrajNames = ["prayagraj", "allahabad"];
-            const cityCandidates = [locality, admin2, sublocality, neighborhood, postalTown, formatted];
-            console.log("City candidates:", cityCandidates);
-
-            const inUttarPradesh = state.includes("uttar pradesh") || state === "up";
-            const inPrayagraj = cityCandidates.some(
-              (n) => n && prayagrajNames.some((name) => n.includes(name))
-            );
-
-            // coordinate fallback bounding box (approx)
-            const prayagrajBounds = {
-              north: 25.6,
-              south: 25.2,
-              west: 81.6,
-              east: 82.0,
-            };
-            const inBounds =
-              lat >= prayagrajBounds.south &&
-              lat <= prayagrajBounds.north &&
-              lng >= prayagrajBounds.west &&
-              lng <= prayagrajBounds.east;
-
-            if ((inUttarPradesh && inPrayagraj) || inBounds) {
-              setStatus("allowed");
-              // console.log('outside')
-            } else {
-              setStatus("outside");
-              navigate("/change-location");
-            }
-          } catch (cbErr) {
-            console.error("Geocode callback error:", cbErr);
-            setStatus("error");
-            setMessage("Error while processing geocode results.");
+        // Aggregate components from results
+        const comp = {};
+        for (const r of results) {
+          for (const c of r.address_components || []) {
+            for (const t of c.types) if (!comp[t]) comp[t] = c.long_name;
           }
-        });
-      } catch (err) {
-        console.error("Maps script or geocode error:", err);
+        }
+
+        const norm = (s) => (s || "").toString().toLowerCase().trim();
+        const state = norm(comp.administrative_area_level_1);
+        const locality = norm(comp.locality);
+        const route = norm(comp.route);
+        const country = norm(comp.country);
+
+        // Create a cleaner, simpler address
+        const formattedAddress = `${route} ${locality}, ${state}, ${country}`;
+
+        // Create a head title for the address
+        const addressTitle = `Location: ${formattedAddress}`;
+        console.log("Address Title:", addressTitle);
+
+        // You can store or display the addressTitle in your UI
+        // For example, you can set it in state to render it in the component
+        setMessage(addressTitle);  // Setting it as the message for now (you can display it as needed)
+
+        // Check if in Prayagraj/Allahabad and Uttar Pradesh
+        const prayagrajNames = ["prayagraj", "allahabad"];
+        const cityCandidates = [locality, formattedAddress];
+        console.log("City candidates:", cityCandidates);
+
+        const inUttarPradesh = state.includes("uttar pradesh") || state === "up";
+        const inPrayagraj = cityCandidates.some((n) => n && prayagrajNames.some((name) => n.includes(name)));
+
+        // Coordinate fallback bounding box (approx)
+        const prayagrajBounds = {
+          north: 25.6,
+          south: 25.2,
+          west: 81.6,
+          east: 82.0,
+        };
+        const inBounds =
+          lat >= prayagrajBounds.south &&
+          lat <= prayagrajBounds.north &&
+          lng >= prayagrajBounds.west &&
+          lng <= prayagrajBounds.east;
+
+        if ((inUttarPradesh && inPrayagraj) || inBounds) {
+          setStatus("allowed");
+        } else {
+          setStatus("outside");
+          navigate("/change-location");
+        }
+      } catch (cbErr) {
+        console.error("Geocode callback error:", cbErr);
         setStatus("error");
-        setMessage(
-          "Failed to load Google Maps or geocode. Check the API key, network, or Google Cloud Console settings."
-        );
+        setMessage("Error while processing geocode results.");
       }
-    };
+    });
+  } catch (err) {
+    console.error("Maps script or geocode error:", err);
+    setStatus("error");
+    setMessage(
+      "Failed to load Google Maps or geocode. Check the API key, network, or Google Cloud Console settings."
+    );
+  }
+};
+
 
     // If a manually-selected location exists in localStorage, use it
     const selected = localStorage.getItem("selected_coords");

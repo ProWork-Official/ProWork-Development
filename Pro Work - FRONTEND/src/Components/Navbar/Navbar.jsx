@@ -239,6 +239,7 @@ function Navbar() {
         const prayagrajNames = ["prayagraj", "allahabad"];
         const cityCandidates = [locality, admin2, sublocality, neighborhood, postalTown, formatted];
         setAdss(cityCandidates[5])
+        console.log("City candidates:", cityCandidates);
 
         const inUttarPradesh = state.includes("uttar pradesh") || state === "up";
         const inPrayagraj = cityCandidates.some(
@@ -287,8 +288,8 @@ function Navbar() {
 
 
     return (
-        <div className={`fixed top-0 left-0 right-0 flex flex-wrap justify-center h-[120px] w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'} ${isHamOpen ? 'bg-white shadow-md' : 'bg-transparent'}`} id='Navbar'>
-            <div className="flex justify-between items-center h-2/3 w-full max-w-[1250px] mx-auto px-4 xl:px-0">
+        <div className={`fixed top-0 left-0 right-0 flex flex-wrap justify-center h-[120px] sm:h-20 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'} ${isHamOpen ? 'bg-white shadow-md' : 'bg-transparent'}`} id='Navbar'>
+            <div className="flex justify-between items-center h-2/3 sm:h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
 
                 {showMap && 
                 <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }} className={showMap ? "fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-[100]" : "hidden"}>
@@ -407,7 +408,7 @@ function Navbar() {
                 }
             </div>
         </div>
-            <div className='flex justify-between items-center h-1/3 w-full max-w-[1250px] mx-auto px-4 xl:px-0 '>
+            <div className='flex sm:hidden justify-between items-center h-1/3 w-full max-w-[1250px] mx-auto px-4 xl:px-0 '>
                
                 <div className='flex items-center pl-1 border rounded-full border-[#33806b] w-full h-[80%]'>
                     <label htmlFor="searchInput" className="md:hidden flex justify-center items-center" onClick={ShowSmallSearch}>
