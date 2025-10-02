@@ -173,8 +173,6 @@ function About() {
               </div>
             </div>
 
-
-
             {/* Social Media */}
             <h3 className="text-[#f2da1d] text-2xl font-semibold mt-12 text-center">Social Media</h3>
             <div className="mx-auto max-w-4xl mt-6">
