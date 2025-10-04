@@ -3,26 +3,41 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import ProworkLogo from '../Assets/ProworkLogo.png';
 
-export const loadScript = (src, timeout = 15000) =>
-  new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      if (window.google && window.google.maps) return resolve();
-      return resolve();
-    }
-    const s = document.createElement("script");
-    s.src = src;
-    s.async = true;
-    s.defer = true;
-    s.setAttribute("loading", "async");
-    s.onload = () => {
-      if (window.google && window.google.maps) resolve();
-      else resolve();
-    };
-    s.onerror = (e) => reject(e);
-    document.head.appendChild(s);
+let googleMapsPromise = null;
 
-    setTimeout(() => reject(new Error("Timed out loading Google Maps script")), timeout);
-});
+export const loadScript = (src) => {
+  // 2. Check if the promise already exists.
+  if (googleMapsPromise) {
+    return googleMapsPromise; // If it does, return the existing promise.
+  }
+  
+  // Also check if the API is already loaded on the window object.
+  if (window.google && window.google.maps) {
+    return Promise.resolve(); // If API is already there, resolve immediately.
+  }
+
+  // 3. If this is the first time, create the promise and the script tag.
+  googleMapsPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true; // Use async for better performance.
+    
+    script.onload = () => {
+      console.log("Google Maps script loaded successfully.");
+      resolve();
+    };
+    
+    script.onerror = (error) => {
+      console.error("Google Maps script failed to load.", error);
+      googleMapsPromise = null; // Reset on error so we can try again later.
+      reject(error);
+    };
+    
+    document.head.appendChild(script);
+  });
+
+  return googleMapsPromise;
+};
 
 export default function LocationGate({ children }) {
 
