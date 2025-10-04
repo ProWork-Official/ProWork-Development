@@ -3,6 +3,7 @@ import { MyContext } from "../ContextAPI";
 import { loadScript } from "./LocationGate";
 import MapLogo from "../Assets/MapLogo.gif";
 import GPS from "../Assets/gps.png";
+import Next from "../Assets/next.png"
 import searcH from "../Assets/search.png";
 import { useDebounce } from "../Components/Hooks/useDebounce";
 import locationIcon from "../Assets/gps.png";
@@ -275,7 +276,7 @@ function UpdateLocation() {
 
                 const comp = {};
                 for (const r of bestResult.address_components || []) {
-                    for (const c of r.types) if (!comp[c]) comp[c] = r.long_name;
+                    for (const c of r.types) if (!comp[c]) comp[c] = r.long_name;
                 }
 
                 const norm = (s) => (s || "").toString().toLowerCase().trim();
@@ -355,13 +356,15 @@ function UpdateLocation() {
     }
 
 
+
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div ref={containerRef} className="flex flex-col bg-white sm:rounded-lg w-full h-full sm:h-[80%] sm:max-w-xl sm:mx-4 md:mx-0 shadow-lg">
-                <div className="flex justify-between items-center p-2 py-4 shadow-md">
-                    <h2 className="text-lg font-semibold ml-4">Your Location</h2>
-                    <button className="text-2xl mr-4" onClick={() => { setShowMap(false); setPickerStep("search"); setStatusMsg(""); }}>
-                        &times;
+            <div ref={containerRef} className=" border-2 border-red-700 flex flex-col bg-white sm:rounded-lg w-full h-full sm:h-[80%] sm:max-w-xl sm:mx-4 md:mx-0 shadow-lg">
+                <div className="flex justify-start p-2 py-4 shadow-md">
+                    <button className=" flex items-center text-sm" onClick={() => { setShowMap(false); setPickerStep("search"); setStatusMsg(""); }}>
+                        <img src={Next} alt="" className="rotate-180 h-[28px] mr-2" />
+                        Your Location
                     </button>
                 </div>
 
@@ -382,7 +385,7 @@ function UpdateLocation() {
                         </label>
 
                         {searchQuery.length > 0 ? (
-                            <div className="flex-grow overflow-y-auto">
+                            <div className="flex-grow overflow-y-auto border border-blue-500 rounded-md">
                                 {predictions.map((p) => (
                                     <div
                                         key={p.place_id}
