@@ -6,6 +6,10 @@ const MyContextProvider = (props) =>{
 
     const [error, setErrors] = useState({})
     const [loadingState, setLoadingState] = useState(false);
+    const [showMap, setShowMap] = useState(false);
+    const [addss, setAdss] = useState("");
+    const [pickerStep, setPickerStep] = useState("search");
+    const [statusMsg, setStatusMsg] = useState("");
 
 
     const [SendOTP, setSendOTP] = useState(false)
@@ -48,6 +52,11 @@ const MyContextProvider = (props) =>{
 
         error, setErrors,
         loadingState, setLoadingState,
+        showMap, setShowMap,
+        addss, setAdss,
+        pickerStep, setPickerStep,
+        statusMsg, setStatusMsg,
+        
 
         SendOTP, setSendOTP,
         OTP_ID, setOTP_ID,
