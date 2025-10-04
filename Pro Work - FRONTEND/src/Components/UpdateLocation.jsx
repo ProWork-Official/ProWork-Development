@@ -89,7 +89,7 @@ function UpdateLocation() {
             setLoadingMap(false);
             if (!mapInstanceRef.current) {
                 const center = selected ? { lat: selected.lat, lng: selected.lng } : defaultCenter;
-                checkAndSaveCoords(center, { autoOpenMapIfOutside: true });
+                // checkAndSaveCoords(center, { autoOpenMapIfOutside: true });
                 const map = new window.google.maps.Map(mapRef.current, { center, zoom: 13 });
                 mapInstanceRef.current = map;
                 const marker = new window.google.maps.Marker({ position: center, map, draggable: true, title: "Drag to set your location"});
