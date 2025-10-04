@@ -278,7 +278,7 @@ function UpdateLocation() {
 
                     if (!bestResult || (formattedAddress && formattedAddress.length > (bestResult.formatted_address || "").length)) {
                         bestResult = result;
-                    }
+                   }
                 }
 
                 if (!bestResult) {
@@ -337,18 +337,29 @@ function UpdateLocation() {
     }
 };
 
-    // This function is called when the user confirms their selected location.
-    const confirmLocation = async () => {
-        if (!selected) return setStatusMsg("No location selected.");
+    // This function is called when the user confirms their selected location.
+    const confirmLocation = async () => {
+    if (!selected) return setStatusMsg("No location selected.");
+    // final address to persist - prefer tempAdds (reverse-geocoded),
+    // but fall back to a lat,lng string if needed
+    const savedAddress = tempAdds || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`;
+    const savedCoords = `${selected.lat},${selected.lng}`;
+    // persist to localStorage so the selection survives page refresh
+    try {
+        localStorage.setItem("selected_coords", savedCoords);
+        localStorage.setItem("selected_address", savedAddress);
+    } catch (e) {
+        console.warn("Failed to write selected location to localStorage:", e);
+    }
+    setAdss(savedAddress);
+    setTimeout(() => {
+        setShowMap(false);
+        setPickerStep("search");
+        setStatusMsg("");
+    }, 350);
+    };
 
-        setAdss(tempAdds)
-        setTimeout(() => {
-            setShowMap(false);
-            setPickerStep("search");
-            setStatusMsg("");
-        }, 350);
-    };
-
+    
     // This function extracts a simplified location name from a full address string.
     function extractLocation(addss) {
         const parts = addss.split(',');
