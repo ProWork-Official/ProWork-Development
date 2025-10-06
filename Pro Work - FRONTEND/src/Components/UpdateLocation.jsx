@@ -12,7 +12,6 @@ function UpdateLocation() {
     const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
     const mapRef = useRef(null);
     const markerRef = useRef(null);
-    const containerRef = useRef(null); // 🟢 ADDED for PlacesService
     const [loadingMap, setLoadingMap] = useState(false);
     const [tempAdds, setTempAddss] = useState('');
     const [selected, setSelected] = useState(null);
@@ -173,29 +172,33 @@ function UpdateLocation() {
     // ...
 
     const handlePredictionClick = (prediction) => {
-        if (!prediction || !prediction.place_id) return;
-        setSearchQuery("");
-        setPredictions([]);
-        setStatusMsg("Fetching location details...");
+    if (!prediction || !prediction.place_id) return;
+    setSearchQuery("");
+    setPredictions([]);
+    setStatusMsg("Fetching location details...");
 
-        // 🟡 MODIFIED to use the reliable containerRef
-        const placesService = new window.google.maps.places.PlacesService(containerRef.current);
+    const placesService = new window.google.maps.places.PlacesService(document.createElement('div'));
 
-        placesService.getDetails({
-            placeId: prediction.place_id,
-            fields: ["geometry", "formatted_address", "name"]
-        }, (place, status) => {
-            if (status === "OK" && place && place.geometry && place.geometry.location) {
-                const lat = place.geometry.location.lat();
-                const lng = place.geometry.location.lng();
-                setSelected({ lat, lng });
-                setTempAddss(place.formatted_address || place.name);
-                setPickerStep("map");
-                setStatusMsg("");
-            } else {
-                setStatusMsg("Could not retrieve location details. Please try again.");
-            }
+    placesService.getDetails({
+        placeId: prediction.place_id,
+        fields: ["geometry", "formatted_address", "name"]
+    }, (place, status) => {
+        if (status === "OK" && place && place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setSelected({ lat, lng });
+        setTempAddss(place.formatted_address || place.name);
+        setStatusMsg("");
+
+        // Wait a tick so the map container is mounted and has layout
+        requestAnimationFrame(() => {
+            // a tiny extra delay helps on some browsers
+            setTimeout(() => setPickerStep("map"), 40);
         });
+        } else {
+        setStatusMsg("Could not retrieve location details. Please try again.");
+        }
+    });
     };
 
      // This function attempts to get the user's current geographic location using the browser's Geolocation API.
@@ -360,7 +363,7 @@ function UpdateLocation() {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div ref={containerRef} className=" border-2 border-red-700 flex flex-col bg-white sm:rounded-lg w-full h-full sm:h-[80%] sm:max-w-xl sm:mx-4 md:mx-0 shadow-lg">
+            <div  className="flex flex-col bg-white sm:rounded-lg w-full h-full sm:h-[80%] sm:max-w-xl sm:mx-4 md:mx-0 shadow-lg">
                 <div className="flex justify-start p-2 py-4 shadow-md">
                     <button className=" flex items-center text-sm" onClick={() => { setShowMap(false); setPickerStep("search"); setStatusMsg(""); }}>
                         <img src={Next} alt="" className="rotate-180 h-[28px] mr-2" />
@@ -369,7 +372,7 @@ function UpdateLocation() {
                 </div>
 
                 {pickerStep === 'search' ? (
-                    <div className="px-4 mt-4 flex flex-col flex-grow">
+                    <div className="px-4 mt-4 flex flex-col flex-grow border-2 border-red-600">
                         <label className="flex w-full items-center text-sm rounded-md border border-[#33806b] p-3 mb-4 focus-within:ring-2 focus-within:ring-[#33806b] bg-gray-100 text-gray-900">
                             <img src={searcH} alt="search" className="h-6 mr-3" />
                             <input
@@ -385,7 +388,7 @@ function UpdateLocation() {
                         </label>
 
                         {searchQuery.length > 0 ? (
-                            <div className="flex-grow overflow-y-auto border border-blue-500 rounded-md">
+                            <div className="flex-grow overflow-y-auto h-[80%] border border-[#f2da1d] rounded-md">
                                 {predictions.map((p) => (
                                     <div
                                         key={p.place_id}
@@ -414,7 +417,7 @@ function UpdateLocation() {
                         )}
                     </div>
                 ) : (
-                    <div className="w-full h-full flex flex-wrap border border-red-600 ">
+                    <div className="w-full h-full flex flex-wrap">
                        <div ref={mapRef} className="w-full h-full sm:rounded-b-md " />
                      		<div className="flex justify-center w-full fixed sm:relative bottom-0 sm:bottom-[35%] left-0 right-0">
                          	<div className="flex flex-col justify-center p-4 bg-white w-[85%] h-[90%] rounded-lg mb-2 shadow-shadow5px shadow-[#33806b] md:rounded-b-md">
