@@ -7,6 +7,9 @@ import Next from "../Assets/next.png"
 import searcH from "../Assets/search.png";
 import { useDebounce } from "../Components/Hooks/useDebounce";
 import locationIcon from "../Assets/gps.png";
+import Next from "../Assets/next.png"
+import CustomMarkerImg from "../Assets/gps.png";   // marker png image 
+
 
 function UpdateLocation() {
     const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
@@ -67,14 +70,11 @@ function UpdateLocation() {
             });
     }, [showMap, pickerStep, debouncedSearchQuery]);
     
-    // 🔴 THE OLD useEffect FOR AUTOCOMPLETE HAS BEEN REMOVED.
+
 
     // Effect for initializing and updating the map view
     useEffect(() => {
         if (!showMap || pickerStep !== "map") return;
-
-        // ... This useEffect block for the map remains the same as your original code ...
-        // (For brevity, I'm omitting the map initialization code as it was correct)
          let listenerClick = null;
         const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (!key) {
@@ -89,10 +89,23 @@ function UpdateLocation() {
             setLoadingMap(false);
             if (!mapInstanceRef.current) {
                 const center = selected ? { lat: selected.lat, lng: selected.lng } : defaultCenter;
-                // checkAndSaveCoords(center, { autoOpenMapIfOutside: true });
+                checkAndSaveCoords(center, { autoOpenMapIfOutside: true });
                 const map = new window.google.maps.Map(mapRef.current, { center, zoom: 13 });
                 mapInstanceRef.current = map;
-                const marker = new window.google.maps.Marker({ position: center, map, draggable: true, title: "Drag to set your location"});
+
+                const markerIcon = {
+                    url: CustomMarkerImg, // imported image
+                    // the size you want the image to render at (pixels)
+                    // adjust 40x40 to match your PNG's presentation
+                    scaledSize: new window.google.maps.Size(40, 40),
+                    // origin of the sprite (0,0) usually fine for single images
+                    origin: new window.google.maps.Point(0, 0),
+                    // anchor: point on the icon that is placed at the LatLng.
+                    // For a pin image, anchor should be (width/2, height)
+                    anchor: new window.google.maps.Point(20, 40),
+                };
+
+                const marker = new window.google.maps.Marker({ position: center, map, draggable: true, title: "Drag to set your location", icon: markerIcon}); //markerIcon was used
                 markerRef.current = marker;
                 listenerClick = map.addListener("click", (e) => {
                     const p = { lat: e.latLng.lat(), lng: e.latLng.lng() };
@@ -167,10 +180,7 @@ function UpdateLocation() {
         } 
     }, [showMap, pickerStep, selected]);
 
-
-    // All other functions (useMyCurrentLocation, checkAndSaveCoords, etc.) remain unchanged.
-    // ...
-
+    //When a user clicks on a prediction from our custom list, we need to fetch its geometric details.
     const handlePredictionClick = (prediction) => {
     if (!prediction || !prediction.place_id) return;
     setSearchQuery("");
@@ -201,6 +211,7 @@ function UpdateLocation() {
     });
     };
 
+
      // This function attempts to get the user's current geographic location using the browser's Geolocation API.
     const useMyCurrentLocation = async () => {
         setStatusMsg("Detecting your current location...");
@@ -217,7 +228,7 @@ function UpdateLocation() {
                 
                 setAdss(tempAddress)
 
-                localStorage.setItem("selected_coords", coords);
+                localStorage.setItem("selected_coords", `${coords.lat},${coords.lng}`);
                 localStorage.setItem("selected_address", tempAddress);
                 
                 setShowMap(false);
@@ -240,7 +251,7 @@ function UpdateLocation() {
     setStatusMsg("Checking selected location...");
     try {
         const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places}`;
+        const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
         await loadScript(src);
 
         if (!window.google || !window.google.maps || typeof window.google.maps.Geocoder !== "function") {
@@ -268,7 +279,7 @@ function UpdateLocation() {
 
                     if (!bestResult || (formattedAddress && formattedAddress.length > (bestResult.formatted_address || "").length)) {
                         bestResult = result;
-                    }
+                   }
                 }
 
                 if (!bestResult) {
@@ -327,18 +338,29 @@ function UpdateLocation() {
     }
 };
 
-    // This function is called when the user confirms their selected location.
-    const confirmLocation = async () => {
-        if (!selected) return setStatusMsg("No location selected.");
+    // This function is called when the user confirms their selected location.
+    const confirmLocation = async () => {
+    if (!selected) return setStatusMsg("No location selected.");
+    // final address to persist - prefer tempAdds (reverse-geocoded),
+    // but fall back to a lat,lng string if needed
+    const savedAddress = tempAdds || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`;
+    const savedCoords = `${selected.lat},${selected.lng}`;
+    // persist to localStorage so the selection survives page refresh
+    try {
+        localStorage.setItem("selected_coords", savedCoords);
+        localStorage.setItem("selected_address", savedAddress);
+    } catch (e) {
+        console.warn("Failed to write selected location to localStorage:", e);
+    }
+    setAdss(savedAddress);
+    setTimeout(() => {
+        setShowMap(false);
+        setPickerStep("search");
+        setStatusMsg("");
+    }, 350);
+    };
 
-        setAdss(tempAdds)
-        setTimeout(() => {
-            setShowMap(false);
-            setPickerStep("search");
-            setStatusMsg("");
-        }, 350);
-    };
-
+    
     // This function extracts a simplified location name from a full address string.
     function extractLocation(addss) {
         const parts = addss.split(',');
@@ -369,55 +391,56 @@ function UpdateLocation() {
                         <img src={Next} alt="" className="rotate-180 h-[28px] mr-2" />
                         Your Location
                     </button>
-                </div>
+                </div>
 
                 {pickerStep === 'search' ? (
-                    <div className="px-4 mt-4 flex flex-col flex-grow border-2 border-red-600">
-                        <label className="flex w-full items-center text-sm rounded-md border border-[#33806b] p-3 mb-4 focus-within:ring-2 focus-within:ring-[#33806b] bg-gray-100 text-gray-900">
-                            <img src={searcH} alt="search" className="h-6 mr-3" />
-                            <input
-                                ref={autocompleteInputRef}
-                                placeholder="Search for area, street name..."
-                                className="w-full bg-transparent outline-none"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery("")} className="text-xl text-gray-500">&times;</button>
-                            )}
-                        </label>
+                <div className="px-4 mt-4 flex flex-col flex-grow min-h-0">
+                <label className="flex w-full items-center text-sm rounded-md border border-[#33806b] p-3 mb-4 focus-within:ring-2 focus-within:ring-[#33806b] bg-gray-100 text-gray-900">
+                    <img src={searcH} alt="search" className="h-6 mr-3" />
+                    <input
+                    ref={autocompleteInputRef}
+                    placeholder="Search for area, street name..."
+                    className="w-full bg-transparent outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="text-xl text-gray-500">&times;</button>
+                    )}
+                </label>
 
-                        {searchQuery.length > 0 ? (
-                            <div className="flex-grow overflow-y-auto h-[80%] border border-[#f2da1d] rounded-md">
-                                {predictions.map((p) => (
-                                    <div
-                                        key={p.place_id}
-                                        onClick={() => handlePredictionClick(p)}
-                                        className="flex items-center p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
-                                    >
-                                        <img src={locationIcon} alt="location" className="h-6 w-6 mr-4" />
-                                        <div>
-                                            <p className="font-semibold text-gray-800">{p.structured_formatting.main_text}</p>
-                                            <p className="text-sm text-gray-500">{p.structured_formatting.secondary_text}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <>
-                                <button onClick={useMyCurrentLocation} className="flex w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
-                                    <img src={GPS} alt="gps" className="h-6 mr-3" />
-                                    Use My Current Location
-                                </button>
-                                <div className="text-sm text-gray-600 min-h-[24px] text-center">{statusMsg}</div>
-                                <div className="mt-6 flex justify-center flex-grow items-center">
-                                    <img src={MapLogo} alt="illustration" className="w-64 sm:w-48 opacity-90" />
-                                </div>
-                            </>
-                        )}
+                {/* Predictions container: flex-grow, scrollable, limited height so it never overflows the viewport */}
+                {searchQuery.length > 0 ? (
+                    <div className="flex-grow overflow-y-auto max-h-[60vh]">
+                    {predictions.map((p) => (
+                        <div
+                        key={p.place_id}
+                        onClick={() => handlePredictionClick(p)}
+                        className="flex items-center p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
+                        >
+                        <img src={locationIcon} alt="location" className="h-6 w-6 mr-4" />
+                        <div>
+                            <p className="font-semibold text-gray-800">{p.structured_formatting.main_text}</p>
+                            <p className="text-sm text-gray-500">{p.structured_formatting.secondary_text}</p>
+                        </div>
+                        </div>
+                    ))}
                     </div>
                 ) : (
-                    <div className="w-full h-full flex flex-wrap">
+                    <>
+                    <button onClick={useMyCurrentLocation} className="flex w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+                        <img src={GPS} alt="gps" className="h-6 mr-3" />
+                        Use My Current Location
+                    </button>
+                    <div className="text-sm text-gray-600 min-h-[24px] text-center">{statusMsg}</div>
+                    <div className="mt-6 flex justify-center flex-grow items-center">
+                        <img src={MapLogo} alt="illustration" className="w-64 sm:w-48 opacity-90" />
+                    </div>
+                    </>
+                )}
+                </div>
+                ) : (
+                    <div className="w-full h-full flex flex-wrap border border-red-600 ">
                        <div ref={mapRef} className="w-full h-full sm:rounded-b-md " />
                      		<div className="flex justify-center w-full fixed sm:relative bottom-0 sm:bottom-[35%] left-0 right-0">
                          	<div className="flex flex-col justify-center p-4 bg-white w-[85%] h-[90%] rounded-lg mb-2 shadow-shadow5px shadow-[#33806b] md:rounded-b-md">
