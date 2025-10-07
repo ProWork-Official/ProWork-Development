@@ -39,6 +39,8 @@ import Contact from './Pages/Contact/Contact.jsx';
 import Feedback from './Pages/Feedback/Feedback.jsx';
 import Wallet from './Pages/Wallet/Wallet.jsx'
 import ChangeLocation from './Pages/ChangeLocation';
+import MyProfile from './Pages/Profile/MyProfile.jsx';
+import MyAddress from './Pages/Profile/MyAddress.jsx';
 
 
 function App() {
@@ -77,7 +79,9 @@ function App() {
           <Route element={<ProtectedRoutes/>}>
             <Route path='/payment_success?' element={<Success/>}/>
             <Route path='/payment_failed?' element={<Failed/>}/>
-            <Route path='/my-profile/:id' element={<Profile/>}/>
+            <Route path='/account' element={<Profile/>}/>
+            <Route path='/account/my-profile' element={<MyProfile/>}/>
+            <Route path='/account/my-address' element={<MyAddress/>}/>
             <Route path='/my-profile/:id/my-booking' element={<MyBooking/>}/>
             <Route path='/my-profile/:id/my-worker-profile/:id' element={<WorkerProfile/>}/>
             <Route path='/my-profile/:id/my-work/:id' element={<MyWork/>}/>

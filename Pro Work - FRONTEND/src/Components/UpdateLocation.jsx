@@ -4,14 +4,15 @@ import { loadScript } from "./LocationGate";
 import MapLogo from "../Assets/MapLogo.gif";
 import GPS from "../Assets/gps.png";
 import Next from "../Assets/next.png"
+import GrayNext from "../Assets/gray-next.png"
 import searcH from "../Assets/search.png";
 import { useDebounce } from "../Components/Hooks/useDebounce";
 import locationIcon from "../Assets/gps.png";
-import Next from "../Assets/next.png"
+import Plus from "../Assets/plus.png"
 import CustomMarkerImg from "../Assets/gps.png";   // marker png image 
 
 
-function UpdateLocation() {
+function UpdateLocation({setShowLocation}) {
     const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
     const mapRef = useRef(null);
     const markerRef = useRef(null);
@@ -387,7 +388,7 @@ function UpdateLocation() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div  className="flex flex-col bg-white sm:rounded-lg w-full h-full sm:h-[80%] sm:max-w-xl sm:mx-4 md:mx-0 shadow-lg">
                 <div className="flex justify-start p-2 py-4 shadow-md">
-                    <button className=" flex items-center text-sm" onClick={() => { setShowMap(false); setPickerStep("search"); setStatusMsg(""); }}>
+                    <button className=" flex items-center text-sm" onClick={() => { setShowMap(false); setPickerStep("search"); setStatusMsg(""); setShowLocation(false); }}>
                         <img src={Next} alt="" className="rotate-180 h-[28px] mr-2" />
                         Your Location
                     </button>
@@ -427,28 +428,61 @@ function UpdateLocation() {
                     ))}
                     </div>
                 ) : (
-                    <>
-                    <button onClick={useMyCurrentLocation} className="flex w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
-                        <img src={GPS} alt="gps" className="h-6 mr-3" />
-                        Use My Current Location
-                    </button>
-                    <div className="text-sm text-gray-600 min-h-[24px] text-center">{statusMsg}</div>
-                    <div className="mt-6 flex justify-center flex-grow items-center">
-                        <img src={MapLogo} alt="illustration" className="w-64 sm:w-48 opacity-90" />
-                    </div>
-                    </>
+                    <div className="flex flex-col flex-grow relative items-center pt-2 justify-between text-center text-gray-600 overflow-y-auto" id="ColorCustomScroll">
+    {/* First section */}
+    <button onClick={useMyCurrentLocation} className="flex w-full mb-3 z-10 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+        <img src={GPS} alt="gps" className="h-6 mr-3" />
+        Use My Current Location
+    </button>
+
+    <button onClick={useMyCurrentLocation} className="flex justify-between z-10 w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+        <div className="flex items-center">
+            <img src={Plus} alt="gps" className="h-6 mr-3" />
+            Add New Address
+        </div>
+        <img src={Next} alt="gps" className="h-6 mr-3" />
+    </button>
+
+    <div className="text-sm text-gray-600 min-h-[24px] pt-24 text-center z-10 ">{statusMsg}Location Detection. Please Wait</div>
+
+    {/* Map Image */}
+    <div className="p-2  rounded-md flex items-center absolute top-28 justify-center mb-6">
+        <img src={MapLogo} alt="" className="h-28" />
+    </div>
+
+    {/* Buttons Section */}
+    <div className="m-6 py-2 rounded-lg w-full bg-slate-100 flex flex-wrap items-center bg-transparent z-10">
+        <h2 className="py-2">Saved Address</h2>
+        <button onClick={useMyCurrentLocation} className="flex justify-between w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+            <div className="flex items-center">
+                <img src={Plus} alt="gps" className="h-6 mr-3" />
+                Add New Address
+            </div>
+            <img src={Next} alt="gps" className="h-6 mr-3" />
+        </button>
+
+        <button onClick={useMyCurrentLocation} className="flex justify-between w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+            <div className="flex items-center">
+                <img src={Plus} alt="gps" className="h-6 mr-3" />
+                Add New Address
+            </div>
+            <img src={Next} alt="gps" className="h-6 mr-3" />
+        </button>
+    </div>
+</div>
+
                 )}
                 </div>
                 ) : (
-                    <div className="w-full h-full flex flex-wrap border border-red-600 ">
+                    <div className="w-full h-full flex flex-wrap">
                        <div ref={mapRef} className="w-full h-full sm:rounded-b-md " />
                      		<div className="flex justify-center w-full fixed sm:relative bottom-0 sm:bottom-[35%] left-0 right-0">
                          	<div className="flex flex-col justify-center p-4 bg-white w-[85%] h-[90%] rounded-lg mb-2 shadow-shadow5px shadow-[#33806b] md:rounded-b-md">
                              	<span className="text-base mb-2 font-serif font-semibold">{extractLocation(tempAdds)}</span>
                              	<span className="text-sm mb-2 text-gray-600 font-sans font-semibold">{tempAdds}</span>
                              	<button className="px-4 py-2 rounded-md w-[98%] bg-emerald-600 text-white" onClick={confirmLocation}>
-                                 	Confirm & Continue
-                             	</button>
+                                	Confirm & Continue
+                             	</button>
                          	</div>
                      		</div>
                     </div>

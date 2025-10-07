@@ -187,8 +187,8 @@ function Navbar() {
 
     return (
         <>
-        <div className={`fixed top-0 left-0 right-0 flex flex-wrap justify-center h-[120px] w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'} ${isHamOpen ? 'bg-white shadow-md' : 'bg-transparent'}`} id='Navbar'>
-            <div className="flex justify-between items-center h-2/3 w-full max-w-[1250px] mx-auto px-4 xl:px-0">
+        <div className={`fixed top-0 left-0 right-0 flex flex-wrap justify-center h-[120px] sm:h-20 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'} ${isHamOpen ? 'bg-white shadow-md' : 'bg-transparent'}`} id='Navbar'>
+            <div className="flex justify-between items-center h-2/3 sm:h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
 
                 {/* Brand Logo */}
                 <Link to='/' ><img src={ProworkLogo} alt="" className='w-[74px] lg:w-[90px]' /></Link>
@@ -267,7 +267,7 @@ function Navbar() {
                 <Link to='/about-us'><span className={`text-sm lg:text-base ${isScrolled ? 'text-[#33806B]' : 'text-[#f2da1d]'} ${isScrolled ? 'hover:text-[#f2da1d]' : 'hover:text-[#33806B]'} transition-colors`} onClick={scrollTop0}>ABOUT US</span></Link>
 
                 {SessionID.SessionID ?
-                    (<Link to={`/my-profile/${UserData.UserObjectID}`}>
+                    (<Link to='account'>
                         <img
                             className="h-10 transition duration-200"
                             src={ isScrolled ? (isUserHovered ? User_Y : User_G)  : (isUserHovered ? User_G : User_Y) }

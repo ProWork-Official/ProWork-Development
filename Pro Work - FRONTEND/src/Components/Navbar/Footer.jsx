@@ -11,7 +11,7 @@ function Footer() {
   const scrollTop0 = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <footer className='w-screen bg-[#f5f7fa] text-gray-800'> {/* bg-[#fce957] */}
+    <footer className='w-screen bg-[#f5f7fa] z-50 text-gray-800'> {/* bg-[#fce957] */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-b border-gray-300">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {/* Company */}

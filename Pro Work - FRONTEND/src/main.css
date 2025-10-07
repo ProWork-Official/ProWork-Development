@@ -72,6 +72,16 @@ textarea { resize: none; }
   background-clip: padding-box;
 }
 
+#ColorCustomScroll::-webkit-scrollbar {
+  width: 25px;
+}
+#ColorCustomScroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 999px;
+  border: 9px solid rgba(0, 0, 0, 0);
+  background-clip: padding-box;
+}
+
 /* it is used in algo serach to hide result scroll */
 #NoScroll{
   -ms-overflow-style: none;  /* For Internet Explorer 10+ */
