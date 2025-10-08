@@ -78,7 +78,7 @@ function MyAddress() {
         <div className=' h-[99vh] bg-white z-[45] grid grid-cols-1 lg:grid-cols-3 grid-rows-12' >
 
             {/* 1 */}
-            <div class="col-span-1 row-span-5">
+            <div className="col-span-1 row-span-5">
                 <div className='pt-4 px-4 h-12 bg-[#f2da1d]'>
                     <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
                         <h1 className='text-[#33806b] text-4xl sm:text-6xl'>P</h1>
@@ -94,10 +94,10 @@ function MyAddress() {
             </div>
 
             {/* 2 */}
-            <div class="hidden lg:flex col-span-2 row-span-1 bg-[#f2da1d]"></div>
+            <div className="hidden lg:flex col-span-2 row-span-1 bg-[#f2da1d]"></div>
 
             {/* 4 */}
-            <div class="hidden lg:flex col-span-2 row-span-11 px-8 py-4 pb-[46px]">
+            <div className="hidden lg:flex col-span-2 row-span-11 px-8 py-4 pb-[46px]">
                 <div className='w-full h-full border border-[#33806b] rounded-lg relative bg-slate-50'>
                     <div className=' w-full h-full overflow-y-auto'>
                         <h1 className='text-lg text-[#33806b] bg-white flex gap-4 items-center mb-4 rounded-t-lg shadow-lg p-2 absolute w-full top-0 left-0'>
