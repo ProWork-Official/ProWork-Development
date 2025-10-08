@@ -1,6 +1,6 @@
 // src/Pages/Profile/MyAddress.jsx
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import Next from "../../Assets/next.png";
@@ -22,7 +22,7 @@ import { useDebounce } from "../../Components/Hooks/useDebounce";
 
 function MyAddress() {
   const { setSendOTP, setPhoneNumber, UserData, removeSessionID, setAdss, setShowMap, setPickerStep, setStatusMsg  } = useContext(MyContext);
-
+  const navigate = useNavigate();
   const [showLocation, setShowLocation] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
 
@@ -57,8 +57,12 @@ function MyAddress() {
     try {
       localStorage.setItem("selected_address", addr.completeAddress);
       if (addr.coords) localStorage.setItem("selected_coords", `${addr.coords.lat},${addr.coords.lng}`);
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to persist selected address:", e);
+    }
+    navigate("/", { replace: true });
   };
+
 
   async function LogOut() {
     try {
