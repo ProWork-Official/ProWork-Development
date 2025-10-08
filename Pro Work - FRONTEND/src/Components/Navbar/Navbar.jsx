@@ -33,7 +33,7 @@ function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHamOpen, setIsHamOpen] = useState(false); 
   const phoneListRef = useRef(null);
-  
+
   const [placeholder, setPlaceholder] = useState("Search");
 
   const [isUserHovered, setIsUserHovered] = useState(false);

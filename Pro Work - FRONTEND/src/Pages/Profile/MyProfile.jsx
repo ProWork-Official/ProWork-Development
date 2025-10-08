@@ -3,7 +3,7 @@ import { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet'
 import axios from 'axios'
-import Next from "../../Assets/next_Y.png"
+import NextY from "../../Assets/next_Y.png"
 
 // Utils
 import UserInfo from '../../Utils/UserInfo.jsx'
@@ -128,7 +128,7 @@ function MyProfile() {
 
               {/* Title */}
               <Link to='/account' className='flex items-center text-lg text-[#33806b] bg-white mb-4 rounded-t-lg shadow-lg py-2 px-4 absolute w-full top-0 left-0'>
-                <img src={Next} alt="" className='rotate-180 h-8' />
+                <img src={NextY} alt="" className='rotate-180 h-8' />
                 Profile
               </Link>
 

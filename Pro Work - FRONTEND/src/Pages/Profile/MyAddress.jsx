@@ -2,8 +2,9 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
+import { Helmet } from "react-helmet";
 import Next from "../../Assets/next.png";
+import NextY from "../../Assets/next_Y.png";
 import ProworkLogo from "../../Assets/ProworkLogo.png";
 import MapLogo from "../../Assets/MapLogo.gif";
 import GPS from "../../Assets/gps.png";
@@ -11,6 +12,9 @@ import searcH from "../../Assets/search.png";
 import locationIcon from "../../Assets/gps.png";
 import Plus from "../../Assets/plus.png";
 import CustomMarkerImg from "../../Assets/gps.png"; // marker png image
+import Home from '../../Assets/home.png';
+import Office from '../../Assets/office.png'
+import Other from '../../Assets/other.png'
 
 import UserInfo from "../../Utils/UserInfo.jsx";
 import ProfileBlock from "../../Components/ProfileBlock/ProfileBlock";
@@ -103,109 +107,122 @@ function MyAddress() {
   }
 
   return (
-    <div className="flex flex-wrap w-screen">
-      <div className="flex justify-center bg-[#f2da1d] h-20 w-full z-40 transition-all duration-300 ">
+    
+
+    <div className='flex flex-wrap w-screen'>
+      <Helmet><title>Pro Work - Account</title></Helmet>
+
+      {/* Profile navbar */}
+      <div className='flex justify-center bg-[#f2da1d] h-20 w-full z-50 transition-all duration-300 '>
         <div className="flex justify-between items-center h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
-          <Link to="/">
-            <img src={ProworkLogo} alt="" className="h-[4.5rem]" />
-          </Link>
-          <button className="bg-[#33806b] text-[#f2da1d] hover:bg-[#317462] h-10 px-6 rounded-md" onClick={LogOut}>
-            Log Out
-          </button>
+          <Link to='/'> <img src={ProworkLogo} alt="" className='h-[4.5rem]' /> </Link>
+          <button className='bg-[#33806b] text-[#f2da1d] hover:bg-[#317462] h-10 px-6 rounded-md' onClick={LogOut}>Log Out</button>
         </div>
       </div>
 
-      <div className="h-[99vh] bg-white z-[45] grid grid-cols-1 lg:grid-cols-3 grid-rows-12">
-        <div className="col-span-1 row-span-5">
-          <div className="pt-4 px-4 h-12 bg-[#f2da1d]">
-            <div className="flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]">
-              <h1 className="text-[#33806b] text-4xl sm:text-6xl">P</h1>
-            </div>
-          </div>
-
-          <div className="w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start">
-            <div className="w-1/2 sm:w-[55%] h-24 sm:h-36 flex flex-wrap justify-start items-start pt-12">
-              <h2 className="text-sm sm:text-xl w-full text-start ">Complete Your Profile</h2>
-              <Link to="/account/my-profile">
-                <button className="bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 ">
-                  Add Profile
-                </button>
-              </Link>
-            </div>
+      {/* Left Part */}
+      <div className='flex flex-wrap w-full mmd:w-[50%] lg:w-[40%] z-50 bg-white'>
+       
+        <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]'>
+          <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
+            <h1 className='text-[#33806b] text-4xl sm:text-6xl'>P</h1>
           </div>
         </div>
 
-        <div className="hidden lg:flex col-span-2 row-span-1 bg-[#f2da1d]" />
+        <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
+          <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
+            <h2 className='text-sm sm:text-xl w-full text-start '>Complete Your Profile</h2>
+            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>ayushjaiswal1667@gmail.com</p> }
+            <Link to='/account/my-profile'><button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button></Link>
+          </div>
+        </div>
 
-        <div className="hidden lg:flex col-span-2 row-span-11 px-8 py-4 pb-[46px]">
-          <div className="w-full h-full border border-[#33806b] rounded-lg relative bg-slate-50">
-            <div className="w-full h-full overflow-y-auto">
-              <h1 className="text-lg text-[#33806b] bg-white flex gap-4 items-center mb-4 rounded-t-lg shadow-lg p-2 absolute w-full top-0 left-0">
-                <img src={Next} alt="" className="rotate-180 h-6" />
-                Address
-              </h1>
-              <div className="pt-16 px-4 pb-4">
-                {/* OPEN embedded UpdateLocation modal */}
-                <div
-                    onClick={() => {
-                      try { localStorage.setItem("auto_open_add", "1"); } catch (e) {}
-                      // open the *global* modal same as Navbar does
-                      setShowMap(true);
-                      setPickerStep("search");
-                      setStatusMsg("");
-                    }}
-                    className="w-full py-4 px-6 border bg-white border-red-700 rounded-xl cursor-pointer"
-                 >
-                    + Add New Address
+        
+        <div className='hidden mmd:flex flex-wrap pb-8 justify-center xs:justify-start pt-4 w-full max-w-[450px]'>
+          <Link className='w-full' to='/account/my-address'>
+            <ProfileBlock heading1='Address' />
+          </Link>
+          <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
+            <ProfileBlock heading1='Bookings' />
+          </Link>
+          <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
+            <ProfileBlock heading1='Register as Worker' />
+          </Link>
+          <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
+            <ProfileBlock heading1='Customer Support' />
+          </Link>
+        </div>
+      </div>
+
+      {/* Right Part */}
+      <div className="flex flex-wrap w-full h-[90vh] mmd:h-auto mmd:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
+
+        <div className='hidden mmd:flex w-full pt-4 px-4 h-12 bg-[#f2da1d]' />
+        
+        <div className='w-full h-full px-8 py-4'>
+          <div className='flex w-full h-full pt-16 px-4 border border-[#33806b] rounded-lg relative '>
+
+            {/* Title */}
+            <Link to='/account' className='flex items-center text-lg text-[#33806b] bg-white mb-4 rounded-t-lg shadow-lg py-2 px-4 absolute w-full top-0 left-0'>
+              <img src={NextY} alt="" className='rotate-180 h-8' />
+              Address
+            </Link>
+
+            {/* Content */}
+            <div className="w-full flex flex-col justify-center flex-wrap">
+                
+              <button onClick={() => { try { localStorage.setItem("auto_open_add", "1"); } catch (e) {} setShowMap(true); setPickerStep("search"); setStatusMsg(""); }} className="flex justify-between z-10 w-full h-12 mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+                <div className="flex items-center">
+                  <img src={Plus} alt="gps" className="h-6 mr-3" /> 
+                  Add New Address
                 </div>
+                <img src={NextY} alt="gps" className="h-6 mr-3" />
+              </button>
+                              
 
-                {/* {showLocation && <UpdateLocationModal onClose={handleLocationClose} autoOpenAdd={true} />} */}
+              <div className="flex  mt-4 flex-col bg-slate-100 rounded-xl">
+                <h2 className="px-2 pt-2">Saved Address</h2>
 
-                <h2 className="pt-12 px-2">Saved Address</h2>
-
-                <div className="mt-4 space-y-2">
-                  {savedAddresses.length === 0 ? (
-                    <div className="w-full mt-2 py-4 px-6 border bg-white rounded-xl text-sm text-gray-500">
+                <div className="mt-4 h-44 flex flex-wrap overflow-y-scroll " id="ColorCustomScroll">
+                  {savedAddresses.length === 0 ? 
+                    <div className="flex w-full mt-2 py-4 px-6 border bg-white rounded-xl text-sm text-gray-500">
                       No saved addresses yet. Click + Add New Address to add.
                     </div>
-                  ) : (
-                    savedAddresses.map((a) => (
-                      <div key={a.id} className="w-full p-4 bg-white rounded-xl border flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-semibold">{a.type} {a.pinCode ? `• ${a.pinCode}` : ""}</div>
-                          <div className="text-xs text-gray-600">{a.completeAddress}</div>
-                          {a.building && <div className="text-xs text-gray-500">Building: {a.building}</div>}
-                          {a.landmark && <div className="text-xs text-gray-500">Landmark: {a.landmark}</div>}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <button onClick={() => selectAddressOnPage(a)} className="px-3 py-1 bg-[#42DCB3] text-white rounded-md text-sm">
-                            Select
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                    : 
+                    savedAddresses.map((a) => 
+                      <div className="w-full px-4">
+                        <button key={a.id} onClick={() => selectAddressOnPage(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
+                          <div className="flex items-center">
+                      
+                            {a.type === 'Home' && <img src={Home} alt="" className="h-8 " />}
+                            {a.type === 'Work' && <img src={Office} alt="" className="h-8" />}
+                            {a.type === 'Others' &&  <img src={Other} alt="" className="h-8" />}
+                      
+                            <div className="flex flex-wrap pl-2">
+                              <div className="text-xs font-semibold w-full text-start"><span className="text-[#33806b]">{a.type}</span> - {a.pinCode || a.type}</div>
+                      
+                              <div className="text-sm text-gray-700 text-left">
+                                <div className="font-medium"></div>
+
+                                <div className="w-full text-xs text-gray-500">{a.completeAddress}</div>
+
+                                <div className="flex flex-wrap mt-1">
+                                  {a.building && <div className="text-xs text-gray-500"><span className="text-black">House No.</span> = {a.building},</div>}
+                                  &nbsp;&nbsp;&nbsp;&nbsp;
+                                  {a.landmark && <div className="text-xs text-gray-500"><span className="text-black">Landmark</span> = {a.landmark}</div>}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>                      
+                    )
+                  }
                 </div>
-              </div>
+             </div>
+
             </div>
-          </div>
-        </div>
 
-        <div className="col-span-1 row-span-7">
-          <div className="flex flex-wrap pb-8 justify-center xs:justify-start pt-4 w-full max-w-[450px]">
-            <Link className="w-full" to="/account/my-address">
-              <ProfileBlock heading1="Address" />
-            </Link>
-
-            <Link className="w-full" to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
-              <ProfileBlock heading1="Bookings" />
-            </Link>
-            <Link className="w-full" to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
-              <ProfileBlock heading1="Register as Worker" />
-            </Link>
-            <Link className="w-full" to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
-              <ProfileBlock heading1="Customer Support" />
-            </Link>
           </div>
         </div>
       </div>

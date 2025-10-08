@@ -3,14 +3,17 @@ import { MyContext } from "../ContextAPI";
 import { loadScript } from "./LocationGate";
 import MapLogo from "../Assets/MapLogo.gif";
 import GPS from "../Assets/gps.png";
-import Next from "../Assets/next.png";
+import NextY from "../Assets/next_Y.png";
 import searcH from "../Assets/search.png";
 import { useDebounce } from "../Components/Hooks/useDebounce";
 import locationIcon from "../Assets/gps.png";
 import Plus from "../Assets/plus.png";
+import Home from '../Assets/home.png';
+import Office from '../Assets/office.png'
+import Other from '../Assets/other.png'
 import CustomMarkerImg from "../Assets/gps.png"; // marker png image
 
-function UpdateLocation({ setShowLocation }) {
+function UpdateLocation() {
   const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -451,109 +454,99 @@ function UpdateLocation({ setShowLocation }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
       <div className="flex flex-col bg-white sm:rounded-lg w-full h-full sm:h-[80%] sm:max-w-xl sm:mx-4 md:mx-0 shadow-lg">
+
         <div className="flex justify-start p-2 py-4 shadow-md">
-          <button
-            className=" flex items-center text-sm"
-            onClick={() => {
-              setShowMap(false);
-              setPickerStep("search");
-              setStatusMsg("");
-              setShowLocation(false);
-            }}
-          >
-            <img src={Next} alt="" className="rotate-180 h-[28px] mr-2" />
+          <button className=" flex items-center text-sm text-[#33806b]" onClick={() => { setShowMap(false); setPickerStep("search"); setStatusMsg("") }} >
+            <img src={NextY} alt="" className="rotate-180 h-[28px] mr-2" />
             Your Location
           </button>
         </div>
 
-        {pickerStep === "search" ? (
+        {pickerStep === "search" ? 
           <div className="px-4 mt-4 flex flex-col flex-grow min-h-0">
+
             <label className="flex w-full items-center text-sm rounded-md border border-[#33806b] p-3 mb-4 focus-within:ring-2 focus-within:ring-[#33806b] bg-gray-100 text-gray-900">
               <img src={searcH} alt="search" className="h-6 mr-3" />
-              <input
-                ref={autocompleteInputRef}
-                placeholder="Search for area, street name..."
-                className="w-full bg-transparent outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
+              <input ref={autocompleteInputRef} placeholder="Search for area, street name..." className="w-full bg-transparent outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+
+              {searchQuery && 
                 <button onClick={() => setSearchQuery("")} className="text-xl text-gray-500">
                   &times;
                 </button>
-              )}
+              }
             </label>
 
-            {searchQuery.length > 0 ? (
+            {searchQuery.length > 0 ? 
               <div className="flex-grow overflow-y-auto max-h-[60vh]">
-                {predictions.map((p) => (
-                  <div
-                    key={p.place_id}
-                    onClick={() => handlePredictionClick(p)}
-                    className="flex items-center p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
-                  >
+                {predictions.map((p) => 
+                  <div key={p.place_id} onClick={() => handlePredictionClick(p)} className="flex items-center p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50">
                     <img src={locationIcon} alt="location" className="h-6 w-6 mr-4" />
                     <div>
                       <p className="font-semibold text-gray-800">{p.structured_formatting.main_text}</p>
                       <p className="text-sm text-gray-500">{p.structured_formatting.secondary_text}</p>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            ) : (
-              <div className="flex flex-col flex-grow relative items-center pt-2 justify-between text-center text-gray-600 overflow-y-auto" id="ColorCustomScroll">
-                <button
-                  onClick={useMyCurrentLocation}
-                  className="flex w-full mb-3 z-10 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center"
-                >
-                  <img src={GPS} alt="gps" className="h-6 mr-3" /> Use My Current Location
-                </button>
+             : 
+              <div className="flex flex-col overflow-x-hidden flex-grow relative items-center pt-2 justify-between text-center text-gray-600 overflow-y-auto" id="ColorCustomScroll">
+                <div className="w-full">
+                  <button onClick={useMyCurrentLocation} className="flex w-full mb-3 z-10 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+                    <img src={GPS} alt="gps" className="h-6 mr-3" /> 
+                    Use My Current Location
+                  </button>
 
-                {/* IMPORTANT: call startAddNewAddress (opens map with current position + confirm) */}
-                <button
-                  onClick={startAddNewAddress}
-                  className="flex justify-between z-10 w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center"
-                >
-                  <div className="flex items-center">
-                    <img src={Plus} alt="gps" className="h-6 mr-3" /> Add New Address
-                  </div>
-                  <img src={Next} alt="gps" className="h-6 mr-3" />
-                </button>
+                  {/* IMPORTANT: call startAddNewAddress (opens map with current position + confirm) */}
+                  <button onClick={startAddNewAddress} className="flex justify-between z-10 w-full mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
+                    <div className="flex items-center">
+                      <img src={Plus} alt="gps" className="h-6 mr-3" /> 
+                      Add New Address
+                    </div>
+                    <img src={NextY} alt="gps" className="h-6 mr-3" />
+                  </button>
+                </div>
 
-                <div className="text-sm text-gray-600 min-h-[24px] pt-8 text-center z-10 ">{statusMsg}</div>
+                <div className="text-sm text-gray-600 min-h-[24px] pt-24 text-center z-10 ">{statusMsg}Location</div>
 
                 <div className="p-2 rounded-md flex items-center absolute top-28 justify-center mb-6">
                   <img src={MapLogo} alt="" className="h-28" />
                 </div>
 
                 {/* Saved addresses list */}
-                <div className="m-6 py-2 rounded-lg w-full bg-slate-100 flex flex-col items-start z-10">
-                  <h2 className="py-2 font-semibold">Saved Addresses</h2>
-                  {savedAddresses.length === 0 ? (
-                    <p className="text-sm text-gray-500 px-4 py-2">No saved addresses yet. Add one using "Add New Address".</p>
-                  ) : (
-                    savedAddresses.map((a) => (
-                      <div key={a.id} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
-                        <div className="flex items-start">
-                          <div className="mr-3 text-sm font-semibold">{a.type}</div>
-                          <div className="text-sm text-gray-700 text-left">
-                            <div className="font-medium">{a.pinCode || a.type}</div>
-                            <div className="text-xs text-gray-500">{a.completeAddress}</div>
+                <div className="m-6 py-2 mt-8 rounded-lg w-full bg-slate-100 flex flex-col items-start z-10">
+                  <h2 className="w-full py-2 font-semibold px-4 text-start">Saved Addresses</h2>
+                  {savedAddresses.length === 0 ? 
+                    <p className="text-sm text-gray-500 px-4 py-2">No address saved yet.</p>
+                   : 
+                    savedAddresses.map((a) => 
+                      <div className="w-full px-4">
+                        <button key={a.id} onClick={() => handleSelectSavedAddress(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
+                          <div className="flex items-center">
+
+                            {a.type === 'Home' && <img src={Home} alt="" className="h-8 " />}
+                            {a.type === 'Work' && <img src={Office} alt="" className="h-8" />}
+                            {a.type === 'Others' &&  <img src={Other} alt="" className="h-8" />}
+
+                            <div className="flex flex-wrap pl-2">
+                              <div className="text-xs font-semibold"><span className="text-[#33806b]">{a.type}</span> - {a.pinCode || a.type}</div>
+
+                              <div className="text-sm text-gray-700 text-left">
+                                <div className="font-medium"></div>
+                                <div className="text-xs text-gray-500">{a.completeAddress}</div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <button onClick={() => handleSelectSavedAddress(a)} className="px-3 py-2 bg-[#42DCB3] text-white rounded-md">
-                          Select
-                        </button>
+                      </button>
                       </div>
-                    ))
-                  )}
+                    )
+                  }
                 </div>
               </div>
-            )}
+            }
           </div>
-        ) : (
+         : 
           <div className="w-full h-full flex flex-wrap relative">
             <div ref={mapRef} className="w-full h-full sm:rounded-b-md" />
 
@@ -598,7 +591,7 @@ function UpdateLocation({ setShowLocation }) {
                     </button>
                     </div>
                   </div> 
-                </div>)}
+                </div>}
 
         {/* Address details form (shown after Confirm & Continue in Add New Address flow) */}
         {showAddressForm && (
