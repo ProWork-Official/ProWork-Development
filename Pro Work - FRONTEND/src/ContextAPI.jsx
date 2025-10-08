@@ -14,7 +14,7 @@ const MyContextProvider = (props) =>{
 
     const [SendOTP, setSendOTP] = useState(false)
     const [OTP_ID, setOTP_ID] = useState('');
-    const [PhoneNumber, setPhoneNumber] = useState(null) 
+    const [PhoneNumber, setPhoneNumber] = useState('') 
 
     
     const [UserData, setUserData] = useState({ UserObjectID: "", UserNumber: "" })

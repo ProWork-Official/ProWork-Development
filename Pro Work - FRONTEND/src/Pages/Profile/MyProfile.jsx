@@ -1,30 +1,31 @@
 // Package
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet'
 import axios from 'axios'
+import Next from "../../Assets/next_Y.png"
 
 // Utils
 import UserInfo from '../../Utils/UserInfo.jsx'
 
+// Assets
 import ProworkLogo from '../../Assets/ProworkLogo.png';
 
 // Components
 import ProfileBlock from '../../Components/ProfileBlock/ProfileBlock'
-import PersonalForm from '../../Components/UserForm/PersonalForm'
-import PersonalLabel from '../../Components/UserForm/PersonalLabel'
-import PersonalFormEdit from '../../Components/UserForm/PersonalFormEdit'
-import AddressForm from '../../Components/UserForm/AddressForm'
-import AddressLabel from '../../Components/UserForm/AddressLabel'
-import AddressFormEdit from '../../Components/UserForm/AddressFormEdit'
 
 // Functions
 import { URL, toastFailure } from '../../func.jsx'
-import { togglePersonalForm, togglePersonalLabel, toggleAddressForm, toggleAddressLabel } from '../../Components/UserForm/funcUserForm'
 import { MyContext } from '../../ContextAPI'
+
 function MyProfile() {
 
-    const { setSendOTP,setPhoneNumber, UserData, PersonalFormData, AddressFormData, WorkerFormData, EditPersonalDetails, EditAddressDetails, removeSessionID } = useContext(MyContext);
+  const { setSendOTP,setPhoneNumber, UserData, removeSessionID } = useContext(MyContext);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Function to open and close the modal
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   // Logging out user
   async function LogOut(){
@@ -47,7 +48,15 @@ function MyProfile() {
       toastFailure("Something went wrong, Please try again");
     }
   }
-  
+
+ 
+  // Function to handle account deletion (replace with your logic)
+  const deleteAccount = () => {
+    alert('Your Pro Work account has been permanently deleted.');
+    closeModal();
+  };
+
+  // If no user data available
   if(!UserData.UserObjectID){
     return (
       <div className="flex flex-wrap justify-center items-center h-1/2 w-screen pt-20 p-6">
@@ -64,45 +73,69 @@ function MyProfile() {
 
   return (
     <div  className='flex flex-wrap w-screen'>
+      <Helmet><title>Pro Work - Account</title></Helmet>
 
-        <div className='flex justify-center bg-[#f2da1d] h-20 w-full z-50 transition-all duration-300 '>
-            <div className="flex justify-between items-center h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
-                <Link to='/'> <img src={ProworkLogo} alt="" className='h-[4.5rem]' /> </Link>
-                <button className='bg-[#33806b] text-[#f2da1d] hover:bg-[#317462] h-10 px-6 rounded-md' onClick={LogOut}>Log Out</button>
-            </div>
+      {/* Profile navbar */}
+      <div className='flex justify-center bg-[#f2da1d] h-20 w-full z-50 transition-all duration-300 '>
+        <div className="flex justify-between items-center h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
+          <Link to='/'> <img src={ProworkLogo} alt="" className='h-[4.5rem]' /> </Link>
+          <button className='bg-[#33806b] text-[#f2da1d] hover:bg-[#317462] h-10 px-6 rounded-md' onClick={LogOut}>Log Out</button>
+        </div>
+      </div>
+
+      {/* Left Part */}
+      <div className='flex flex-wrap w-full mmd:w-[50%] lg:w-[40%] z-50 bg-white'>
+       
+        <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]'>
+          <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
+            <h1 className='text-[#33806b] text-4xl sm:text-6xl'>P</h1>
+          </div>
         </div>
 
-        <div className=' h-[99vh] bg-white z-[45] grid grid-cols-3 grid-rows-12' >
+        <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
+          <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
+            <h2 className='text-sm sm:text-xl w-full text-start '>Complete Your Profile</h2>
+            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>ayushjaiswal1667@gmail.com</p> }
+            <Link to='/account/my-profile'><button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button></Link>
+          </div>
+        </div>
 
-            {/* 1 */}
-            <div class="col-span-1 row-span-5">
-                <div className='pt-4 px-4 h-12 bg-[#f2da1d]'>
-                    <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
-                        <h1 className='text-[#33806b] text-4xl sm:text-6xl'>P</h1>
-                    </div>
-                </div>
+        
+        <div className='hidden mmd:flex flex-wrap pb-8 justify-center xs:justify-start pt-4 w-full max-w-[450px]'>
+          <Link className='w-full' to='/account/my-address'>
+            <ProfileBlock heading1='Address' />
+          </Link>
+          <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
+            <ProfileBlock heading1='Bookings' />
+          </Link>
+          <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
+            <ProfileBlock heading1='Register as Worker' />
+          </Link>
+          <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
+            <ProfileBlock heading1='Customer Support' />
+          </Link>
+        </div>
+      </div>
 
-                <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
-                    <div className='w-1/2 sm:w-[55%] h-24 sm:h-36 flex flex-wrap justify-start items-start pt-12'>
-                        <h2 className='text-sm sm:text-xl w-full text-start '>Complete Your Profile</h2>
-                        <Link to='/account/my-profile'><button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button></Link>
-                    </div>
-                </div>
-            </div>
+      {/* Right Part */}
+      <div className="flex flex-wrap w-full h-[90vh] mmd:h-auto mmd:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
 
-            {/* 2 */}
-            <div class="col-span-2 row-span-1 bg-[#f2da1d]"></div>
+        <div className='hidden mmd:flex w-full pt-4 px-4 h-12 bg-[#f2da1d]' />
+        
+        <div className='w-full h-full px-8 py-4'>
+          <div className='w-full h-full border border-[#33806b] rounded-lg relative '>
+            <div className=' w-full h-full overflow-y-auto'>
 
-            {/* 4 */}
-            <div class="col-span-2 row-span-11 px-8 py-4 pb-[46px]">
-                <div className='w-full h-full border border-[#33806b] rounded-lg relative '>
-                    <div className=' w-full h-full overflow-y-auto'>
-                        <h1 className='text-lg text-[#33806b] bg-white mb-4 rounded-t-lg shadow-lg py-2 px-4 absolute w-full top-0 left-0'>
-                            Profile
-                        </h1>
-                        <div className='pt-12 px-4 pb-4'>
+              {/* Title */}
+              <Link to='/account' className='flex items-center text-lg text-[#33806b] bg-white mb-4 rounded-t-lg shadow-lg py-2 px-4 absolute w-full top-0 left-0'>
+                <img src={Next} alt="" className='rotate-180 h-8' />
+                Profile
+              </Link>
 
-<div className="flex w-full flex-wrap justify-center">
+              {/* Content */}
+              <div className='pt-16 px-4 pb-4 flex flex-col justify-center'>
+
+                <div className="flex w-full flex-wrap justify-center">
         <div className="flex w-full justify-center">
           <fieldset className="h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8">
             <legend className="text-[#33806b]">Name</legend>
@@ -118,7 +151,9 @@ function MyProfile() {
         {/* {error.Name && <span className="errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4">{error.Name}</span>} */}
       </div>
 
-      <div className="flex w-full flex-wrap justify-center">
+                
+
+                <div className="flex w-full flex-wrap justify-center">
         <div className="flex w-full justify-center">
           <fieldset className="h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8">
             <legend className="text-[#33806b]">Email</legend>
@@ -134,10 +169,9 @@ function MyProfile() {
         {/* {error.Email && <span className="errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4">{error.Email}</span>} */}
       </div>
 
-
       <div className='w-full flex justify-end px-4'>
         <button
-        className="h-12 w-[25%] border-2 border-[#f2da1d] rounded-xl shadow-lg shadow-[#33806b] bg-[#33806b] text-white"
+        className="h-12 w-[50%] lg:w-[25%] border-2 border-[#f2da1d] rounded-xl shadow-lg shadow-[#33806b] bg-[#33806b] text-white"
         id="send-OTP-BTN"
         // onClick={handlePersonalSubmit}
       >
@@ -151,33 +185,43 @@ function MyProfile() {
       </button>
       </div>
 
-                        </div>
 
-
-                    </div>
+                <div className='w-full flex flex-wrap mt-8 absolute bottom-4 left-0 px-8'>
+                  <button onClick={openModal}  className='text-[#e45b5b] mb-2'>Delete Account</button>
+                  <h2 className='w-full text-xs text-neutral-500 text-sans'>Deleting your account will remove all your bookings, wallet amount and any reviews created by you.</h2>
                 </div>
-            </div>
 
-            {/* 5 */}
-            <div className='col-span-1 row-span-7'>
-                <div className='flex flex-wrap pb-8 justify-center xs:justify-start pt-4 w-full max-w-[450px]'>
-                    <Link className='w-full' to='/account/my-address'>
-                      <ProfileBlock heading1='Address' />
-                    </Link>
-                    <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
-                      <ProfileBlock heading1='Bookings' />
-                    </Link>
-                    <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
-                      <ProfileBlock heading1='Register as Worker' />
-                    </Link>
-                    <Link className='w-full' to={`/my-profile/${UserData.UserObjectID}/my-booking`}>
-                      <ProfileBlock heading1='Customer Support' />
-                    </Link>
-                </div>
-            </div>
+                {/* Modal structure */}
+                {isModalOpen && (
+                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center" >
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+                      {/* Modal Header */}
+                      <h2 className="text-xl font-bold text-center text-red-600">
+                        Confirm Account Deletion
+                      </h2>
             
-
+                      {/* Modal Body */}
+                      <p className="mt-4 text-center text-gray-800">
+                        Once you confirm, your Pro Work account and all associated data will be permanently removed. Are you sure you want to continue?
+                      </p>
+            
+                      {/* Modal Footer */}
+                      <div className="mt-6 flex justify-center space-x-4">
+                        <button onClick={deleteAccount} className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600" >
+                          Confirm
+                        </button>
+                        <button onClick={closeModal} className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
   )
 }
