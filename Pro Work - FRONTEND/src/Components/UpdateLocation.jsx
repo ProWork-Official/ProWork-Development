@@ -521,8 +521,8 @@ function UpdateLocation() {
                     <p className="text-sm text-gray-500 px-4 py-2">No address saved yet.</p>
                    : 
                     savedAddresses.map((a) => 
-                      <div className="w-full px-4">
-                        <button key={a.id} onClick={() => handleSelectSavedAddress(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
+                      <div className="w-full px-4" key={a.id}>
+                        <button onClick={() => handleSelectSavedAddress(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
                           <div className="flex items-center">
 
                             {a.type === 'Home' && <img src={Home} alt="" className="h-8 " />}

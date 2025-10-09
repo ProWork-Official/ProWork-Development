@@ -190,8 +190,8 @@ function MyAddress() {
                     </div>
                     : 
                     savedAddresses.map((a) => 
-                      <div className="w-full px-4">
-                        <button key={a.id} onClick={() => selectAddressOnPage(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
+                      <div className="w-full px-4"  key={a.id}>
+                        <button onClick={() => selectAddressOnPage(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
                           <div className="flex items-center">
                       
                             {a.type === 'Home' && <img src={Home} alt="" className="h-8 " />}
