@@ -12,6 +12,7 @@ import Home from '../Assets/home.png';
 import Office from '../Assets/office.png'
 import Other from '../Assets/other.png'
 import CustomMarkerImg from "../Assets/gps.png"; // marker png image
+import Pin from "../Assets/pin.png"; // marker png image
 
 function UpdateLocation() {
   const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
@@ -113,6 +114,7 @@ function UpdateLocation() {
 
           const markerIcon = {
             url: CustomMarkerImg,
+            url: Pin,
             scaledSize: new window.google.maps.Size(40, 40),
             origin: new window.google.maps.Point(0, 0),
             anchor: new window.google.maps.Point(20, 40),
@@ -202,6 +204,8 @@ function UpdateLocation() {
       }
     };
   }, [showMap, pickerStep, selected]);
+
+  
 
   // clicking a prediction opens the map centered on that place
   const handlePredictionClick = (prediction) => {
@@ -508,7 +512,7 @@ function UpdateLocation() {
                   </button>
                 </div>
 
-                <div className="text-sm text-gray-600 min-h-[24px] pt-24 text-center z-10 ">{statusMsg}Location</div>
+                <div className="text-sm text-gray-600 min-h-[24px] pt-24 text-center z-10 ">{statusMsg}</div>
 
                 <div className="p-2 rounded-md flex items-center absolute top-28 justify-center mb-6">
                   <img src={MapLogo} alt="" className="h-28" />

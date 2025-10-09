@@ -19,7 +19,7 @@ import { MyContext } from '../../ContextAPI'
 
 function Profile() {
 
-  const { setSendOTP,setPhoneNumber, UserData, removeSessionID } = useContext(MyContext);
+  const { setSendOTP,setPhoneNumber, UserData, PersonalFormData, removeSessionID } = useContext(MyContext);
   
   // Logging out user
   async function LogOut(){
@@ -60,6 +60,7 @@ function Profile() {
     )
   }
 
+
   return (
     <div  className='flex flex-wrap w-screen'>
       <Helmet><title>Pro Work - Account</title></Helmet>
@@ -83,9 +84,17 @@ function Profile() {
 
         <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
           <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
-            <h2 className='text-sm sm:text-xl w-full text-start '>Complete Your Profile</h2>
-            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>ayushjaiswal1667@gmail.com</p> }
-            <Link to='/account/my-profile'><button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button></Link>
+            <h2 className='text-sm sm:text-xl w-full text-start '>{PersonalFormData ? PersonalFormData.Name : 'Complete Your Profile'}</h2>
+            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>{PersonalFormData ? PersonalFormData.Email : ''}</p> }
+            {PersonalFormData ?
+            <Link to='/account/my-profile'>
+              <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Edit Profile</button>
+            </Link>
+            :
+            <Link to='/account/my-profile'>
+              <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button>
+            </Link>
+            }
           </div>
         </div>
 

@@ -1,8 +1,9 @@
-// src/Pages/Profile/MyAddress.jsx
+// Package
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Helmet } from "react-helmet";
+
 import Next from "../../Assets/next.png";
 import NextY from "../../Assets/next_Y.png";
 import ProworkLogo from "../../Assets/ProworkLogo.png";
@@ -25,8 +26,8 @@ import { loadScript } from "../../Components/LocationGate"; // path from Pages/P
 import { useDebounce } from "../../Components/Hooks/useDebounce";
 
 function MyAddress() {
-  const { setSendOTP, setPhoneNumber, UserData, removeSessionID, setAdss, setShowMap, setPickerStep, setStatusMsg  } = useContext(MyContext);
-
+  const { setSendOTP, setPhoneNumber, UserData, PersonalFormData, removeSessionID, setAdss, setShowMap, setPickerStep, setStatusMsg  } = useContext(MyContext);
+  const navigate = useNavigate();
   const [showLocation, setShowLocation] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
 
@@ -61,8 +62,12 @@ function MyAddress() {
     try {
       localStorage.setItem("selected_address", addr.completeAddress);
       if (addr.coords) localStorage.setItem("selected_coords", `${addr.coords.lat},${addr.coords.lng}`);
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to persist selected address:", e);
+    }
+    navigate("/", { replace: true });
   };
+
 
   async function LogOut() {
     try {
@@ -131,9 +136,17 @@ function MyAddress() {
 
         <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
           <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
-            <h2 className='text-sm sm:text-xl w-full text-start '>Complete Your Profile</h2>
-            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>ayushjaiswal1667@gmail.com</p> }
-            <Link to='/account/my-profile'><button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button></Link>
+            <h2 className='text-sm sm:text-xl w-full text-start '>{PersonalFormData ? PersonalFormData.Name : 'Complete Your Profile'}</h2>
+            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>{PersonalFormData ? PersonalFormData.Email : ''}</p> }
+            {PersonalFormData ?
+            <Link to='/account/my-profile'>
+              <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Edit Profile</button>
+            </Link>
+            :
+            <Link to='/account/my-profile'>
+              <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button>
+            </Link>
+            }
           </div>
         </div>
 
