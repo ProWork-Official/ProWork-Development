@@ -5,7 +5,8 @@ import {
     userSignUpPost, userSignUpGet, userLogOut, 
     userPersonalPost, userPersonalGet, userPersonalPatch,
     userAddressPost, userAddressGet, userAddressPatch,
-    MyBookingPost, MyBookingGet
+    MyBookingPost, MyBookingGet,
+    userDeleteAccount   
 } from '../controllers/User.js';
 
 
@@ -23,5 +24,6 @@ Router.patch("/address/edit", userAddressPatch)
 
 Router.post("/booking", MyBookingPost)
 Router.get("/booking", MyBookingGet)
+Router.delete("/delete", userDeleteAccount);
 
 export default Router

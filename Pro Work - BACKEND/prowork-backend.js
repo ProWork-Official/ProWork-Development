@@ -21,6 +21,8 @@ import AdminRouter from './routes/Admin.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+import os from 'os';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,11 +33,14 @@ const proworkBackend = express();
 const Port = process.env.PORT;
 
 // Applying middleware to the server
-proworkBackend.use(cors({ origin: [ 'http://localhost:4000', 'http://prowork.org.in', 'https://prowork.org.in'], methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization', 'params'],  credentials: true }));
+proworkBackend.use(cors({ origin: [ 'http://localhost:4000', 'http://localhost:4005', 'http://prowork.org.in', 'https://prowork.org.in'], methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization', 'params'],  credentials: true }));
 proworkBackend.use(cookieParser());
 proworkBackend.use(express.json());
 proworkBackend.use(express.urlencoded({ extended: true }));
-proworkBackend.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp' }));
+// Use OS-specific temp directory to store uploads (works on Windows/macOS/Linux)
+const uploadTmpDir = path.join(os.tmpdir(), 'prowork-upload-temp');
+try { fs.mkdirSync(uploadTmpDir, { recursive: true }); } catch (e) { console.error('Failed to create upload temp dir:', uploadTmpDir, e); }
+proworkBackend.use(fileUpload({ useTempFiles: true, tempFileDir: uploadTmpDir }));
 
 // Serve static files from the "assets" folder
 proworkBackend.use('/assets', express.static(path.join(__dirname, 'assets')));

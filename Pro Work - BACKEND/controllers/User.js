@@ -266,7 +266,7 @@ export async function userAddressPatch(req, res){
 }
 
 
-//--------------------------------------My Bookings Details--------------------------------
+// --------------------------------------My Bookings Details--------------------------------
 
 // function to add booking details of user
 export async function MyBookingPost(req, res){
@@ -306,4 +306,33 @@ export async function MyBookingGet(req, res){
         return res.status(500).send({ message: "Error in fetching User Booking Details, Please Login", error });
     }
 }
+
+//--------------------------------------Delete Account----------------------------------
+export async function userDeleteAccount(req, res) {
+    const jwtPresent = req.cookies?.UserToken;
+    if (!jwtPresent) return res.status(401).send({ message: 'Expired or Invalid Token, Please login again' });
+
+    try {
+        const currUserID = JWT.verify(jwtPresent, JWT_Secret).UserObjectID;
+
+        // Delete all related documents (personal, address, bookings) and the User itself
+        // Using Promise.all so deletions run in parallel
+        const deletePersonal = UserPersonal.deleteMany({ UserObjectID: currUserID });
+        const deleteAddresses = UserAddress.deleteMany({ UserObjectID: currUserID });
+        const deleteBookings = UserBooking.deleteMany({ UserObjectID: currUserID });
+        const deleteUser = User.deleteOne({ _id: currUserID });
+
+        await Promise.all([deletePersonal, deleteAddresses, deleteBookings, deleteUser]);
+
+        // Clear auth cookie
+        res.clearCookie("UserToken");
+
+        console.log(`Deleted user (${currUserID}) and related records.`);
+        return res.status(204).send().end();
+    } catch (error) {
+        console.error("Error deleting account:", error);
+        return res.status(500).send({ message: "Error deleting account. Try again.", error });
+    }
+}
+
 

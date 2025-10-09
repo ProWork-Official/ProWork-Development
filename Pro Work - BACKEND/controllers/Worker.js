@@ -2,6 +2,7 @@
 import JWT from 'jsonwebtoken';
 import { v2 as cloudinary } from 'cloudinary';
 import { algoliasearch } from 'algoliasearch';
+import fs from 'fs';
 
 
 
@@ -15,6 +16,13 @@ import WorkerBank from '../models/Worker/WorkerBank.js';
 import WorkerWidthdrawal from '../models/Worker/WorkerWidthrawal.js';
 import WorkerMoney from '../models/Worker/WorkerMoney.js';
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET,
+  secure: true
+});
+
 // Importing environment variables
 const JWT_Secret = process.env.JWT_SECRET;
 const Algolia_App_ID = process.env.ALGOLIA_APP_ID;
@@ -23,12 +31,32 @@ const Algolia_Secret_Key = process.env.ALGOLIA_SECRET_KEY;
 // creating algolia instance
 const algoliaClient = algoliasearch(Algolia_App_ID, Algolia_Secret_Key);
 
+// helper: normalize uploaded file entry (support array or single file)
+function pickFile(uploaded) {
+  if (!uploaded) return null;
+  if (Array.isArray(uploaded)) return uploaded[0];
+  return uploaded;
+}
 
 // Upload Worker image to cloudinary
 async function uploadFileToCloudinary(file, folder) {
-  const options = { folder, resource_type: file.mimetype.startsWith('video/') ? 'video' : 'auto' };
-  return await cloudinary.uploader.upload(file.tempFilePath, options);
+  if (!file) throw new Error("No file provided to uploadFileToCloudinary");
+
+  // file may be an object from express-fileupload (has tempFilePath) or a multer file with path
+  const filePath = file.tempFilePath || file.path || file.filepath || null;
+
+  if (!filePath) {
+    // If buffer provided (rare), we can upload via upload_stream (advanced). For now throw helpful error.
+    throw new Error("Uploaded file does not have a tempFilePath or path. Ensure you use express-fileupload with useTempFiles:true or multer and provide a path.");
+  }
+
+  const resourceType = (file.mimetype && file.mimetype.startsWith("video/")) ? "video" : "image";
+  const options = { folder: folder || "ProWork", resource_type: resourceType };
+
+  // cloudinary.uploader.upload accepts a local path or URL
+  return cloudinary.uploader.upload(filePath, options);
 }
+
 
 //--------------------------------------Count Service-------------------------------- 
 // ServiceNumber find this models _id and put it here, line 106
@@ -81,49 +109,135 @@ async function CountService(options) {
 //--------------------------------------Worker Details--------------------------------
 // function to create new worker/shop 
 export async function workerRegisterPost(req, res) {
-  const jwtPresent = req.cookies?.UserToken
-  if (!jwtPresent) return res.status(401).send({ message: 'Expired or Invalid Token, Please login again' });
-      
-  try{
-    const currUserID = JWT.verify( jwtPresent, JWT_Secret ).UserObjectID;
-    
+  const jwtPresent = req.cookies?.UserToken;
+  if (!jwtPresent) return res.status(401).send({ message: "Expired or Invalid Token, Please login again" });
+
+  try {
+    const currUserID = JWT.verify(jwtPresent, JWT_Secret).UserObjectID;
     const { ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, UserObjectID } = req.body;
+
     if (UserObjectID !== currUserID) return res.status(403).send({ message: "Invalid user ID" });
-    
-    console.log("Worker registration process start")
-    if (!req.files || !req.files['AadharFront'] || !req.files['AadharBack'] || !req.files['ShopPhoto1'] || !req.files['ShopPhoto2'] || !req.files['ShopPhoto3']) return res.status(400).send({ message: "Files are missing" });
 
-    const AadharFront = req.files['AadharFront'];
-    const AadharBack = req.files['AadharBack'];
-    const ShopPhoto1 = req.files['ShopPhoto1']
-    const ShopPhoto2 = req.files['ShopPhoto2']
-    const ShopPhoto3 = req.files['ShopPhoto3']
-  
-    // console.log("AadharFront", AadharFront, AadharFront.mimetype)
-    // console.log("ShopPhoto1", ShopPhoto1, ShopPhoto1.mimetype)
+    console.log("=== workerRegisterPost called ===");
+    console.log("req.body keys:", Object.keys(req.body || {}));
+    console.log("preview req.body:", { ShopName, ShopAddress, ShopCategory, FullName, ShopEmail, ShopPhoneNumber, UserObjectID });
+    console.log("req.files keys:", Object.keys(req.files || {}));
+    // small preview of req.files shape
+    try {
+      const preview = Object.entries(req.files || {}).reduce((acc, [k, v]) => {
+        if (!v) acc[k] = null;
+        else if (Array.isArray(v)) acc[k] = `${v.length} files`;
+        else acc[k] = { name: v.name, mimetype: v.mimetype, hasTemp: !!v.tempFilePath, hasPath: !!v.path };
+        return acc;
+      }, {});
+      console.log("req.files preview:", preview);
+    } catch (e) {
+      console.log("Could not preview req.files", e);
+    }
 
-    if (!AadharFront || !AadharFront.mimetype) return res.status(400).send({ message: "Aadhar Card file is invalid" });
-    if (!AadharBack || !AadharBack.mimetype) return res.status(400).send({ message: "Aadhar Card file is invalid" });
-    if (!ShopPhoto1 || !ShopPhoto1.mimetype) return res.status(400).send({ message: "Shop Photo 1 is invalid" });
-    if (!ShopPhoto2 || !ShopPhoto2.mimetype) return res.status(400).send({ message: "Shop Photo 2 is invalid" });
-    if (!ShopPhoto3 || !ShopPhoto3.mimetype) return res.status(400).send({ message: "Shop Photo 3 is invalid" });
+    // helper - pick first file if it's an array
+    const pickFile = (x) => {
+      if (!x) return null;
+      return Array.isArray(x) ? x[0] : x;
+    };
 
-    const files = [AadharFront, AadharBack, ShopPhoto1, ShopPhoto2, ShopPhoto3];
-    const uploadedFiles = await Promise.all(files.map(file => uploadFileToCloudinary(file, `ProWork/${FullName}`) ));
-    const [uploadedAadharFront, uploadedAadharBack, uploadedShopPhoto1, uploadedShopPhoto2, uploadedShopPhoto3] = uploadedFiles;
+    const AadharFront = pickFile(req.files?.AadharFront);
+    const AadharBack  = pickFile(req.files?.AadharBack);
+    const PanCard     = pickFile(req.files?.PanCard);
+    const ShopPhoto1  = pickFile(req.files?.ShopPhoto1);
+    const ShopPhoto2  = pickFile(req.files?.ShopPhoto2);
+    const ShopPhoto3  = pickFile(req.files?.ShopPhoto3);
 
-    console.log('Worker data saving to database')
-    const savedWorker = await new Worker({ AadharFront: uploadedAadharFront.secure_url, AadharBack: uploadedAadharBack.secure_url, ShopPhoto1: uploadedShopPhoto1.secure_url, ShopPhoto2: uploadedShopPhoto2.secure_url, ShopPhoto3: uploadedShopPhoto3.secure_url, ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, isWorker: true, UserObjectID: UserObjectID }).save();
-    const initateBalance = await new WorkerMoney({ WorkerBalance: 0, UserObjectID: UserObjectID, WorkerObjectID: savedWorker._id }).save();
-    
-    console.log(`New worker added successfully with name ${savedWorker.ShopName}`);
-    console.log(`New worker balance = Rs.${initateBalance}`);
+    // Validate presence
+    if (!AadharFront) return res.status(400).send({ message: "AadharFront file is missing" });
+    if (!AadharBack)  return res.status(400).send({ message: "AadharBack file is missing" });
+    if (!PanCard)     return res.status(400).send({ message: "PanCard file is missing" });
+    if (!ShopPhoto1)  return res.status(400).send({ message: "ShopPhoto1 file is missing" });
+    if (!ShopPhoto2)  return res.status(400).send({ message: "ShopPhoto2 file is missing" });
+    if (!ShopPhoto3)  return res.status(400).send({ message: "ShopPhoto3 file is missing" });
+
+    // ensure each file has a path we can upload
+    const filesToCheck = { AadharFront, AadharBack, PanCard, ShopPhoto1, ShopPhoto2, ShopPhoto3 };
+    for (const [key, file] of Object.entries(filesToCheck)) {
+      const filePath = file.tempFilePath || file.path || file.filepath || null;
+      if (!filePath) {
+        console.error(`File ${key} missing tempFilePath/path. file object:`, file);
+        return res.status(400).send({ message: `Uploaded file ${key} has no file path (tempFilePath/path). Ensure express-fileupload useTempFiles:true or multer producing a path.` });
+      }
+      if (!fs.existsSync(filePath)) {
+        console.error(`File ${key} path does not exist on server:`, filePath);
+        return res.status(400).send({ message: `Uploaded file ${key} not found on server at ${filePath}` });
+      }
+    }
+
+    // upload helper that reports which file fails
+    async function uploadSingle(file, folderName) {
+      try {
+        const pathToUpload = file.tempFilePath || file.path || file.filepath;
+        const resourceType = (file.mimetype && file.mimetype.startsWith("video/")) ? "video" : "image";
+        const result = await cloudinary.uploader.upload(pathToUpload, { folder: folderName, resource_type: resourceType });
+        return result;
+      } catch (err) {
+        // rethrow with context
+        err.message = `Cloudinary upload error for file ${file.name || "<unknown>"}: ${err.message}`;
+        throw err;
+      }
+    }
+
+    // upload all files with clear error handling
+    const uploadFolder = `ProWork/${FullName || "unknown"}`;
+    let uploaded;
+    try {
+      uploaded = await Promise.all([
+        uploadSingle(AadharFront, uploadFolder),
+        uploadSingle(AadharBack, uploadFolder),
+        uploadSingle(PanCard, uploadFolder),
+        uploadSingle(ShopPhoto1, uploadFolder),
+        uploadSingle(ShopPhoto2, uploadFolder),
+        uploadSingle(ShopPhoto3, uploadFolder)
+      ]);
+    } catch (uploadError) {
+      console.error("Upload failure:", uploadError);
+      return res.status(500).send({ message: "File upload failed", error: uploadError.message || uploadError });
+    }
+
+    const [uAadharFront, uAadharBack, uPanCard, uShop1, uShop2, uShop3] = uploaded;
+
+    // ensure Area is array when saving (your schema expects Array)
+    const normalizedArea = Array.isArray(Area) ? Area : (Area ? [Area] : []);
+
+    // create the worker
+    const savedWorker = await new Worker({
+      AadharFront: uAadharFront.secure_url,
+      AadharBack: uAadharBack.secure_url,
+      PanCard: uPanCard.secure_url,
+      ShopPhoto1: uShop1.secure_url,
+      ShopPhoto2: uShop2.secure_url,
+      ShopPhoto3: uShop3.secure_url,
+      ShopName,
+      ShopDescription,
+      ShopAddress,
+      ShopCategory,
+      Area: normalizedArea,
+      City,
+      FullName,
+      ShopEmail,
+      ShopPhoneNumber,
+      isWorker: true,
+      UserObjectID
+    }).save();
+
+    await new WorkerMoney({ WorkerBalance: 0, UserObjectID, WorkerObjectID: savedWorker._id }).save();
+
+    console.log("Worker saved:", savedWorker._id);
     return res.status(201).send(savedWorker);
-  } catch (error) {
-    console.log("Error in creating shop:", error);
-    return res.status(500).send({ message: "Error in adding worker", error });
+
+  } catch (err) {
+    console.error("Unhandled error in workerRegisterPost:", err.stack || err);
+    return res.status(500).send({ message: "Error in adding worker", error: err.message || err });
   }
 }
+
 // function to send saved worker/shop details to frontend
 export async function workerRegisterGet(req, res) {
   const jwtPresent = req.cookies?.UserToken
@@ -148,7 +262,7 @@ export async function workerRegisterPatch(req, res) {
       
   try{
     const currUserID = JWT.verify( jwtPresent, JWT_Secret ).UserObjectID;
-    let { ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, AadharFront, AadharBack, ShopPhoto1, ShopPhoto2, ShopPhoto3, UserObjectID } = req.body;
+    let { ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, AadharFront, AadharBack, PanCard, ShopPhoto1, ShopPhoto2, ShopPhoto3, UserObjectID } = req.body;
     if (UserObjectID !== currUserID) return res.status(403).send({ message: "Invalid user ID" });
                 
     // Check if any image is updated, if yes then upload that updated image to cloudinary
@@ -166,6 +280,12 @@ export async function workerRegisterPatch(req, res) {
         if (!AadharBackFile || !AadharBackFile.mimetype) return res.status(400).send({ message: "Aadhar Card file is invalid" });
         
         AadharBack = await uploadFileToCloudinary(OwnerAadharCardBackFile, `ProWork/${FullName}`);
+      }
+
+      if (req.files.PanCard) {
+          const PanCardFile = Array.isArray(req.files.PanCard) ? req.files.PanCard[0] : req.files.PanCard;
+          if (!PanCardFile || !PanCardFile.mimetype) return res.status(400).send({ message: "PAN Card file is invalid" });
+          PanCard = await uploadFileToCloudinary(PanCardFile, `ProWork/${FullName}`);
       }
         
       if (req.files.ShopPhoto1) {
@@ -188,7 +308,7 @@ export async function workerRegisterPatch(req, res) {
       }     
     }
       
-    const updatedWorker = await Worker.findOneAndUpdate({UserObjectID: UserObjectID}, { AadharFront: AadharFront.secure_url, AadharBack: AadharBack.secure_url, ShopPhoto1: ShopPhoto1.secure_url, ShopPhoto2: ShopPhoto2.secure_url, ShopPhoto3: ShopPhoto3.secure_url, ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, });
+    const updatedWorker = await Worker.findOneAndUpdate({UserObjectID: UserObjectID}, { AadharFront: AadharFront.secure_url, AadharBack: AadharBack.secure_url, PanCard: PanCard.secure_url, ShopPhoto1: ShopPhoto1.secure_url, ShopPhoto2: ShopPhoto2.secure_url, ShopPhoto3: ShopPhoto3.secure_url, ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, });
     
     console.log(`Worker updated successfully with Name ${updatedWorker.ShopName}`);        
     return res.status(201).send(updatedWorker);
@@ -390,12 +510,12 @@ export async function WorkerView(req, res){
 }
 
 export async function OneWorkerView(req, res){
-  try{
+  try {
     const { id } = req.params;
+    console.log('OneWorkerView called with id =', id);
     const selectedWorker = await Worker.find({ _id: id });
-    if (selectedWorker[0] == undefined) return res.status(404).send({ message: "Worker not found with this ID" });
-    
-    console.log('Selected worker sent successfully');
+    console.log('Worker.find returned length =', selectedWorker.length);
+    if (!selectedWorker[0]) return res.status(404).send({ message: "Worker not found with this ID" });
     return res.status(200).send(selectedWorker);
   } catch (error) {
     console.log("Error in fetching selected worker details", error);

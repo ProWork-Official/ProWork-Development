@@ -9,6 +9,10 @@ const WorkerSchema = new mongoose.Schema({
         type: String, 
         required: true,
     },
+    PanCard: {
+        type: String, 
+        required: true,
+    },
     ShopPhoto1: {
         type: String,
         required: true,
