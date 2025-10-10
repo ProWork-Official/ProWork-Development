@@ -205,6 +205,14 @@ function UpdateLocation() {
     };
   }, [showMap, pickerStep, selected]);
 
+   useEffect(() => {
+     // On mount, check localStorage for selected_address
+     try {
+      const addr = localStorage.getItem("selected_address");
+      if (addr) setAdss(addr); // Update context
+      } catch (e) {}
+   }, []);
+
   
 
   // clicking a prediction opens the map centered on that place

@@ -16,6 +16,7 @@ import CustomMarkerImg from "../../Assets/gps.png"; // marker png image
 import Home from '../../Assets/home.png';
 import Office from '../../Assets/office.png'
 import Other from '../../Assets/other.png'
+import DeleteIcon from "../../Assets/delete.png";
 
 import UserInfo from "../../Utils/UserInfo.jsx";
 import ProfileBlock from "../../Components/ProfileBlock/ProfileBlock";
@@ -30,6 +31,7 @@ function MyAddress() {
   const navigate = useNavigate();
   const [showLocation, setShowLocation] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
+  const [addAddressWarning, setAddAddressWarning] = useState(false);
 
   useEffect(() => {
     loadSavedAddresses();
@@ -40,6 +42,14 @@ function MyAddress() {
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
+
+
+  useEffect(() => {
+    if (savedAddresses.length < 3) {
+       setAddAddressWarning(false);
+    }
+  }, [savedAddresses]);
+
 
   function loadSavedAddresses() {
     try {
@@ -66,6 +76,16 @@ function MyAddress() {
       console.warn("Failed to persist selected address:", e);
     }
     navigate("/", { replace: true });
+  };
+
+  // Delete address handler
+  const handleDeleteAddress = (id) => {
+    const updated = savedAddresses.filter((a) => a.id !== id);
+    setSavedAddresses(updated);
+    try {
+      localStorage.setItem("saved_addresses", JSON.stringify(updated));
+    } catch (e) {}
+    setAddAddressWarning(false);
   };
 
 
@@ -182,43 +202,57 @@ function MyAddress() {
             </Link>
 
             {/* Content */}
-            <div className="w-full flex flex-col justify-center flex-wrap">
-                
-              <button onClick={() => { try { localStorage.setItem("auto_open_add", "1"); } catch (e) {} setShowMap(true); setPickerStep("search"); setStatusMsg(""); }} className="flex justify-between z-10 w-full h-12 mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center">
-                <div className="flex items-center">
-                  <img src={Plus} alt="gps" className="h-6 mr-3" /> 
-                  Add New Address
-                </div>
-                <img src={NextY} alt="gps" className="h-6 mr-3" />
-              </button>
-                              
-
-              <div className="flex  mt-4 flex-col bg-slate-100 rounded-xl">
-                <h2 className="px-2 pt-2">Saved Address</h2>
-
-                <div className="mt-4 h-44 flex flex-wrap overflow-y-scroll " id="ColorCustomScroll">
-                  {savedAddresses.length === 0 ? 
-                    <div className="flex w-full mt-2 py-4 px-6 border bg-white rounded-xl text-sm text-gray-500">
-                      No saved addresses yet. Click + Add New Address to add.
-                    </div>
-                    : 
-                    savedAddresses.map((a) => 
-                      <div className="w-full px-4"  key={a.id}>
-                        <button onClick={() => selectAddressOnPage(a)} className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between">
+          <div className="w-full flex flex-col justify-center flex-wrap">
+            <button
+              onClick={() => {
+                if (savedAddresses.length >= 3) {
+                  setAddAddressWarning(true);
+                } else {
+                  try { localStorage.setItem("auto_open_add", "1"); } catch (e) {}
+                  setShowMap(true);
+                  setPickerStep("search");
+                  setStatusMsg("");
+                  setAddAddressWarning(false);
+                }
+              }}
+              className={`flex justify-between z-10 w-full h-12 mb-3 rounded-md border border-[#f2da1d] bg-white text-[#33806b] font-semibold p-3 items-center ${savedAddresses.length >= 3 ? " cursor-not-allowed" : ""}`}
+              // disabled={savedAddresses.length >= 3}
+            >
+              <div className="flex items-center">
+                <img src={Plus} alt="gps" className="h-6 mr-3" />
+                Add New Address
+              </div>
+              <img src={NextY} alt="gps" className="h-6 mr-3" />
+            </button>
+            {addAddressWarning && (
+              <div className="text-xs text-red-600 mt-2 ml-2">
+                You added maximum allowed addresses. Please delete one to add another.
+              </div>
+            )}
+            <div className="flex  mt-4 flex-col bg-slate-100 rounded-xl">
+              <h2 className="px-2 pt-2">Saved Address</h2>
+              <div className="mt-4 h-44 flex flex-wrap overflow-y-scroll " id="ColorCustomScroll">
+                {savedAddresses.length === 0 ?
+                  <div className="flex w-full mt-2 py-4 px-6 border bg-white rounded-xl text-sm text-gray-500">
+                    No saved addresses yet. Click + Add New Address to add.
+                  </div>
+                  :
+                  savedAddresses.map((a) =>
+                    <div className="w-full px-4" key={a.id}>
+                      <div className="relative">
+                        <button
+                          onClick={() => selectAddressOnPage(a)}
+                          className="w-full p-3 bg-white rounded-md mb-2 border flex items-center justify-between"
+                        >
                           <div className="flex items-center">
-                      
                             {a.type === 'Home' && <img src={Home} alt="" className="h-8 " />}
                             {a.type === 'Work' && <img src={Office} alt="" className="h-8" />}
-                            {a.type === 'Others' &&  <img src={Other} alt="" className="h-8" />}
-                      
+                            {a.type === 'Others' && <img src={Other} alt="" className="h-8" />}
                             <div className="flex flex-wrap pl-2">
                               <div className="text-xs font-semibold w-full text-start"><span className="text-[#33806b]">{a.type}</span> - {a.pinCode || a.type}</div>
-                      
                               <div className="text-sm text-gray-700 text-left">
                                 <div className="font-medium"></div>
-
                                 <div className="w-full text-xs text-gray-500">{a.completeAddress}</div>
-
                                 <div className="flex flex-wrap mt-1">
                                   {a.building && <div className="text-xs text-gray-500"><span className="text-black">House No.</span> = {a.building},</div>}
                                   &nbsp;&nbsp;&nbsp;&nbsp;
@@ -228,13 +262,21 @@ function MyAddress() {
                             </div>
                           </div>
                         </button>
-                      </div>                      
-                    )
-                  }
-                </div>
-             </div>
-
+                        {/* Delete icon */}
+                        <button
+                          onClick={() => handleDeleteAddress(a.id)}
+                          className="absolute top-2 right-2 p-1 bg-red-100 rounded-full hover:bg-red-200"
+                          title="Delete address"
+                        >
+                          <img src={DeleteIcon} alt="Delete" className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                }
+              </div>
             </div>
+          </div>
 
           </div>
         </div>
