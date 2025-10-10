@@ -7,6 +7,7 @@ import User from '../models/User/User.js'
 import UserPersonal from '../models/User/UserPersonal.js'
 import UserAddress from '../models/User/UserAddress.js'
 import UserBooking from '../models/User/UserBooking.js'
+import UserMapAddress from '../models/User/UserMapAddress.js';
 
 // Importing environment variables
 const JWT_Secret = process.env.JWT_SECRET;
@@ -262,6 +263,81 @@ export async function userAddressPatch(req, res){
     } catch (error) {
         console.log("Error in updating user's address", error);
         return res.status(500).send({ message: "Error in updating user's address", error });
+    }
+}
+// --------------------------------------Map Address Details--------------------------------
+
+// Add map address (max 3 per user, one per type)
+export async function userMapAddressPost(req, res) {
+    const jwtPresent = req.cookies?.UserToken;
+    if (!jwtPresent) return res.status(401).send({ message: 'Expired or Invalid Token, Please login again' });
+
+    try {
+        const currUserID = JWT.verify(jwtPresent, JWT_Secret).UserObjectID;
+        const { type, building, landmark, pinCode, completeAddress, coords } = req.body;
+
+        // Get all addresses for this user
+        const addresses = await UserMapAddress.find({ UserObjectID: currUserID });
+        console.log(req.body)
+        // Check max 3 addresses
+        if (addresses.length >= 3) {
+            return res.status(400).send({ message: "Maximum 3 addresses allowed. Delete one to add another." });
+        }
+
+        // Check for duplicate type
+        // if (addresses.some(a => a.type === type)) {
+        //     return res.status(400).send({ message: `Address for ${type} already exists.` });
+        // }
+
+        const savedAddress = await new UserMapAddress({
+            UserObjectID: currUserID,
+            type,
+            building,
+            landmark,
+            pinCode,
+            completeAddress,
+            coords,
+            isAddress: true
+        }).save();
+
+        return res.status(201).send(savedAddress);
+    } catch (error) {
+        console.log("Error in adding user's address", error);
+        return res.status(500).send({ message: "Error in adding user's address", error });
+    }
+}
+
+// Get all addresses for user
+export async function userMapAddressGet(req, res) {
+    const jwtPresent = req.cookies?.UserToken;
+    if (!jwtPresent) return res.status(401).send({ message: 'Expired or Invalid Token, Please login again' });
+
+    try {
+        const currUserID = JWT.verify(jwtPresent, JWT_Secret).UserObjectID;
+        const addresses = await UserMapAddress.find({ UserObjectID: currUserID });
+        return res.status(200).send(addresses);
+    } catch (error) {
+        console.log("User Address Details not found", error);
+        return res.status(500).send({ message: "User Address Details not found", error });
+    }
+}
+
+// Delete address by ID
+export async function userMapAddressDelete(req, res) {
+    const jwtPresent = req.cookies?.UserToken;
+    if (!jwtPresent) return res.status(401).send({ message: 'Expired or Invalid Token, Please login again' });
+
+    try {
+        const currUserID = JWT.verify(jwtPresent, JWT_Secret).UserObjectID;
+        const { addressId } = req.params;
+
+        const deleted = await UserMapAddress.deleteOne({ _id: addressId, UserObjectID: currUserID });
+        if (deleted.deletedCount === 0) return res.status(404).send({ message: "Address not found or not deleted" });
+
+        return res.status(200).send({ message: "Address deleted successfully" });
+    } catch (error) {
+        console.log("Error in deleting user's address", error);
+        return res.status(500).send({ message: "Error in deleting user's address", error });
     }
 }
 
