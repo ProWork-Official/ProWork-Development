@@ -1,19 +1,17 @@
 // Packages
 import { useState, useEffect, useContext, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-
-import UpdateLocation from '../UpdateLocation'
+import { Link } from 'react-router-dom'
 
 // Styles
 import './Navbar.css'
 
 // Components
 import AlgoSearch from '../AlgoSearch/AlgoSearch'
+import UpdateLocation from '../UpdateLocation'
 
 // Functions
 import { showSignUpForm } from '../SignUpForm/signUp'
 import { MyContext } from '../../ContextAPI'
-import { loadScript } from '../LocationGate'
 
 // Assets
 import Menu_Y from '../../Assets/equal_Y.png'
@@ -25,78 +23,33 @@ import User_G from '../../Assets/user_G.png'
 import SearchIcon_Y from "../../Assets/nav_search_Y.png";
 import SearchIcon_G from "../../Assets/nav_search_G.png";
 import ProworkLogo from '../../Assets/ProworkLogo.png';
-import DownArrow from '../../Assets/down-arrow.png';    
+import DownArrowG from '../../Assets/down-arrowG.png';    
+import DownArrowY from '../../Assets/down-arrowY.png';    
 
 
 function Navbar() {
-  const { UserData, SessionID, addss, showMap, setShowMap, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isHamOpen, setIsHamOpen] = useState(false); 
-  const phoneListRef = useRef(null);
+    const { UserData, SessionID, addss, showMap, setShowMap, setPickerStep, setStatusMsg } = useContext(MyContext);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isHamOpen, setIsHamOpen] = useState(false); 
+    const phoneListRef = useRef(null);
 
-  const [placeholder, setPlaceholder] = useState("Search");
+    const [placeholder, setPlaceholder] = useState("Search");
 
-  const [isUserHovered, setIsUserHovered] = useState(false);
-  const [isSearchHovered, setIsSearchHovered] = useState(false);
-  const [isHamHovered, setIsHamHovered] = useState(false);
+    const [isUserHovered, setIsUserHovered] = useState(false);
+    const [isSearchHovered, setIsSearchHovered] = useState(false);
+    const [isHamHovered, setIsHamHovered] = useState(false);
 
-  const handleEnterUser = () => setIsUserHovered(true);
-  const handleLeaveUser = () => setIsUserHovered(false);
+    const handleEnterUser = () => setIsUserHovered(true);
+    const handleLeaveUser = () => setIsUserHovered(false);
 
-  const handleEnterSearch = () => setIsSearchHovered(true);
-  const handleLeaveSearch = () => setIsSearchHovered(false);
+    const handleEnterSearch = () => setIsSearchHovered(true);
+    const handleLeaveSearch = () => setIsSearchHovered(false);
 
-  const handleEnterHam = () => setIsHamHovered(true);
-  const handleLeaveHam = () => setIsHamHovered(false);
-  
-    
+    const handleEnterHam = () => setIsHamHovered(true);
+    const handleLeaveHam = () => setIsHamHovered(false);
   
 
-  
-
-
-
-
-    const truncateAddress = (addr, words) => {
-      if (!addr) return "";
-      const parts = addr.trim().split(/\s+/);
-    //   console.log(parts);
-      if (parts.length <= words) return addr;
-      return parts.slice(0, words).join(" ") + "...";
-    };
-
-    function extractLocation2(addss) {
-    const parts = addss.split(',').map(part => part.trim());
-    const firstPart = parts[0];
-
-    // Match plus codes like "9RQC+MR7"
-    const isPlusCode = /^[0-9A-Z]{4,}\+[0-9A-Z]{2,}$/i.test(firstPart);
-
-    // Match house numbers like "122H/2J", "B-23", etc.
-    const isHouseNumber = /[0-9]/.test(firstPart) && /[\/-]/.test(firstPart);
-
-    if ((isPlusCode || isHouseNumber) && parts.length > 1) {
-        // Remove the first part and return the rest joined back with commas
-        const filteredParts = parts.slice(1).join(', ');
-        return truncateAddress(filteredParts, 2)
-    } else {
-        // Return the full address as-is
-        const filteredParts = addss.trim();
-        return truncateAddress(filteredParts, 2)
-    }
-}
-
-
-
-    const clearSelected = () => {
-      localStorage.removeItem("selected_coords");
-      localStorage.removeItem("selected_address");
-      setStatusMsg("Saved selection cleared.");
-      setSelected(null);
-      setAdss("");
-    };
-
-
+    // Handle navbar scroll
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 10) { setIsScrolled(true) }
@@ -106,14 +59,16 @@ function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Handle dynamic placeholder
     useEffect(() => {
-    const placeholders = [ "Search electricians", "Search plumbers", "What service are you looking for?", "What is your location?", "Try Searching area..." ];
-    let index = 0;
-    const interval = setInterval(() => {
-      setPlaceholder(placeholders[index]);
-      index = (index + 1) % placeholders.length;
-    }, 3000);
-    return () => clearInterval(interval);
+        const placeholders = [ "Search electricians", "Search plumbers", "What service are you looking for?", "What is your location?", "Try Searching area..." ];
+        let index = 0;
+        const interval = setInterval(() => {
+            setPlaceholder(placeholders[index]);
+            index = (index + 1) % placeholders.length;
+        }, 3000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const scrollTop0 = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -135,73 +90,135 @@ function Navbar() {
     const previousAddss = localStorage.getItem("selected_address");
 
     function extractLocation1(address) {
-    if (!address || typeof address !== 'string') return '';
+        if (!address || typeof address !== 'string') return '';
 
-    const parts = address.split(',').map(part => part.trim());
-    if (parts.length === 0) return '';
+        const parts = address.split(',').map(part => part.trim());
+        if (parts.length === 0) return '';
 
-    // Lowercase lists for checking
-    const roadKeywords = [
-        'road', 'street', 'marg', 'station', 'circle', 'lane', 'nagar',
-        'bazaar', 'unnamed', 'highway', 'expressway', 'bypass', 'rd'
-    ];
+        // Lowercase lists for checking
+        const roadKeywords = [
+            'road', 'street', 'marg', 'station', 'circle', 'lane', 'nagar',
+            'bazaar', 'unnamed', 'highway', 'expressway', 'bypass', 'rd'
+        ];
 
-    const commercialKeywords = [
-        'shop', 'floor', 'gate', 'centre', 'crossing', 'apartment', 'complex',
-        'service', 'building', 'hospital', 'mall', 'near', 'opp', 'opposite', 'hall', 'landmark'
-    ];
+        const commercialKeywords = [
+            'shop', 'floor', 'gate', 'centre', 'crossing', 'apartment', 'complex',
+            'service', 'building', 'hospital', 'mall', 'near', 'opp', 'opposite', 'hall', 'landmark'
+        ];
 
-    const genericAreas = [
-        'prayagraj', 'uttar pradesh', 'india', 'division', 'state', 'country'
-    ];
+        const genericAreas = [
+            'prayagraj', 'uttar pradesh', 'india', 'division', 'state', 'country'
+        ];
 
-    // Helper to check if a part should be skipped
-    const shouldSkip = (part) => {
-        const partLower = part.toLowerCase();
+        // Helper to check if a part should be skipped
+        const shouldSkip = (part) => {
+            const partLower = part.toLowerCase();
 
-        // Skip if numeric-like (e.g. "44", "5d", "9/5", "211001")
-        if (/^\d{3,6}$/.test(part)) return true;
+            // Skip if numeric-like (e.g. "44", "5d", "9/5", "211001")
+            if (/^\d{3,6}$/.test(part)) return true;
 
-        // Skip if road/infrastructure/commercial/broad location
-        if (roadKeywords.some(k => partLower.includes(k))) return true;
-        if (commercialKeywords.some(k => partLower.includes(k))) return true;
-        if (genericAreas.some(k => partLower === k || partLower.includes(k))) return true;
+            // Skip if road/infrastructure/commercial/broad location
+            if (roadKeywords.some(k => partLower.includes(k))) return true;
+            if (commercialKeywords.some(k => partLower.includes(k))) return true;
+            if (genericAreas.some(k => partLower === k || partLower.includes(k))) return true;
 
-        return false;
+            return false;
+        };
+
+        // Try to find the most specific usable location, starting from the middle of the address
+        const middleStart = Math.floor(parts.length / 2);
+        for (let i = middleStart; i < parts.length; i++) {
+            const part = parts[i].trim();
+            if (!shouldSkip(part)) return part;
+        }
+        for (let i = middleStart - 1; i >= 0; i--) {
+            const part = parts[i].trim();
+            if (!shouldSkip(part)) return part;
+        }
+
+        return '';
+    }
+
+    function extractLocation2(addss) {
+        const parts = addss.split(',').map(part => part.trim());
+        const firstPart = parts[0];
+
+        // Match plus codes like "9RQC+MR7"
+        const isPlusCode = /^[0-9A-Z]{4,}\+[0-9A-Z]{2,}$/i.test(firstPart);
+
+        // Match house numbers like "122H/2J", "B-23", etc.
+        const isHouseNumber = /[0-9]/.test(firstPart) && /[\/-]/.test(firstPart);
+        const isOnlyNumber = /^[0-9]+$/.test(firstPart);
+        const isNumberAndLetter = /^[0-9]+[a-zA-Z]$/.test(firstPart);
+
+
+
+        if ((isPlusCode || isHouseNumber || isOnlyNumber || isNumberAndLetter) && parts.length > 1) {
+            // Remove the first part and return the rest joined back with commas
+            const filteredParts = parts.slice(1).join(', ');
+            return truncateAddress(filteredParts, 2)
+        } else {
+            // Return the full address as-is
+            const filteredParts = addss.trim();
+            return truncateAddress(filteredParts, 2)
+        }
+    }
+
+   const truncateAddress = (addr, words) => {
+    if (!addr) return "";
+
+    // Split the address by commas
+    const parts = addr.split(",");
+    
+    // The first part is everything before the comma
+    const firstPart = parts[0].trim();
+
+    // If we only want the first two parts, split the remaining string into words
+    const remainingPart = parts.slice(1).join(" ").trim();
+    const remainingWords = remainingPart.split(/\s+/);
+
+    // Concatenate the first part and the truncated second part
+    let result = firstPart;
+
+    // Add the second part after the first if there are remaining words
+    if (remainingWords.length > 0 && words > 1) {
+        result += ", " + remainingWords.slice(0, words - 1).join(" ");
+    }
+    if (result.length <= 15) {
+        result += ", " + "Prayagraj"
+    }
+
+    return result;
     };
-
-    // Try to find the most specific usable location, starting from the middle of the address
-    const middleStart = Math.floor(parts.length / 2);
-    for (let i = middleStart; i < parts.length; i++) {
-        const part = parts[i].trim();
-        if (!shouldSkip(part)) return part;
-    }
-    for (let i = middleStart - 1; i >= 0; i--) {
-        const part = parts[i].trim();
-        if (!shouldSkip(part)) return part;
-    }
-
-    return '';
-}
 
 
     return (
-        <>
         <div className={`fixed top-0 left-0 right-0 flex flex-wrap justify-center h-[120px] sm:h-20 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'} ${isHamOpen ? 'bg-white shadow-md' : 'bg-transparent'}`} id='Navbar'>
             <div className="flex justify-between items-center h-2/3 sm:h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
 
                 {/* Brand Logo */}
-                <Link to='/' ><img src={ProworkLogo} alt="" className='w-[74px] lg:w-[90px]' /></Link>
+                <Link to='/'><img src={ProworkLogo} alt="" className='w-[74px] lg:w-[90px]' /></Link>
 
                 {/* My Location Component */}
-                <div onClick={() => { setShowMap(true); setPickerStep("search"); setStatusMsg(""); }} className='flex flex-wrap w-[40%] xxxs:w-[50%] xxs:w-[55%] ssm:w-[27%] h-[60%] md:h-[70%] md:ml-4 ml-1 pt-3 xxxs:pt-2 px-2 mt-1 cursor-pointer'>
-                    <div className=' w-full text-[12px] xxxs:text-[14px] md:text-sm text-[#f2da1d] leading-loose'>Your Location</div>
-                    <div className='text-[10px] xxxs:text-[12px] font-bold md:text-sm font-sans text-[#33806b] flex justify-between items-center'>
+                <div onClick={() => { setShowMap(true); setPickerStep("search"); setStatusMsg(""); }} className='flex flex-wrap w-[40%] xxs:w-[57%] ssm:w-[27%] md:w-[35%] h-[70%] md:h-[70%] cursor-pointer ml-1 sm:ml-4'>
+                    <div className='w-full max-w-[150px] grid grid-cols-5 grid-rows-2'>
+                    <div className={` w-full text-[12px] leading-loose col-span-4 row-span-1 ${isScrolled ? 'text-[#f2da1d]' : 'text-[#7ee3c8]'}`}>Your Location</div>
+
+                    <div className='col-span-1 row-span-1 flex justify-center items-center'>
+                        {isScrolled ? 
+                        
+                        <img src={DownArrowY} alt="" className='h-5' />
+                        : 
+                        <img src={DownArrowG} alt="" className='h-5' />
+                        
+                        }
+                    </div>
+
+                    <div className={`col-span-5 row-span-1 text-[10px] font-bold font-sans flex justify-start mmd:justify-between items-start mmd:items-center ${isScrolled ? 'text-[#33806b]' : 'text-[#f2da1d]'}`}>
                         <span title={addss || ""}>
                             {extractLocation1(addss? `${addss} ` : `${previousAddss}`)} - {addss ? extractLocation2(addss) : previousAddss? extractLocation2(previousAddss) : "Select your location"}
-                        {/* {addss ? truncateAddress(addss, 2) : previousAddss? truncateAddress(previousAddss, 3) : "Select your location"} */}
                         </span>
-                        <img src={DownArrow} alt="" className='h-5' />
+                    </div>
                     </div>
                 </div>
 
@@ -225,7 +242,7 @@ function Navbar() {
                             />
                         </button>
 
-                        {SessionID.SessionID ? (
+                        {SessionID.SessionID ? 
                             <Link to={`/my-profile/${UserData.UserObjectID}`}>
                                 <img
                                     className="h-10 transition duration-200"
@@ -235,9 +252,8 @@ function Navbar() {
                                     onMouseLeave={handleLeaveUser}
                                 />
                             </Link>
-                            ) 
                             : 
-                            (<button className="bg-[#f2da1d] text-[#33806b] text-xs font-bold px-4 py-[0.5rem] rounded-full shadow hover:opacity-90 transition duration-300" onClick={showSignUpForm}>Sign Up</button>)
+                            <button className="bg-[#f2da1d] text-[#33806b] text-xs font-bold px-4 py-[0.5rem] rounded-full shadow hover:opacity-90 transition duration-300" onClick={showSignUpForm}>Sign Up</button>
                         }
                     </div>
                 </div>
@@ -283,7 +299,7 @@ function Navbar() {
         </div>
             <div className='flex sm:hidden justify-between items-center h-1/3 w-full max-w-[1250px] mx-auto px-4 xl:px-0 '>
                
-                <div className='flex items-center pl-1 border rounded-full border-[#33806b] w-full h-[80%]'>
+                <div className={`flex items-center pl-1 border rounded-full w-full h-[80%] ${isScrolled ? 'border-[#33806b]' : 'border-[#f2da1d]'}`}>
                     <label htmlFor="searchInput" className="md:hidden flex justify-center items-center" onClick={ShowSmallSearch}>
                         <img  
                             className="h-6 cursor-pointer" 
@@ -292,15 +308,13 @@ function Navbar() {
                             onMouseEnter={handleEnterSearch}
                             onMouseLeave={handleLeaveSearch} 
                         />
-                        <input type="text" className="w-full ml-4 text-gray-800 placeholder-gray-500 text-xs bg-transparent focus:outline-none" placeholder={placeholder}/>
+                        <input type="text" className={`w-full ml-4 text-gray-800 text-xs bg-transparent focus:outline-none ${isScrolled ? 'placeholder-gray-800' : 'placeholder-gray-200'}`} placeholder={placeholder}/>
                     </label>
                 </div>
             </div>
+            
+            {showMap && <UpdateLocation />}
         </div>
-
-        {/* ---------- modal (search -> map) ---------- */}
-        {showMap && <UpdateLocation />}
-        </>
     )
 }
 

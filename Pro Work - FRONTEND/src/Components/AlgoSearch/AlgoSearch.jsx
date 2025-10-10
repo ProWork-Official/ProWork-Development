@@ -79,20 +79,20 @@ const AlgoSearch = ({isScrolled}) => {
   }
 
   return (
-    <div id="SmallSearch" className="displayNone lg:flex w-full md:w-[40%] h-screen md:h-auto fixed md:relative flex-col top-0 left-0 bg-[#fff] md:bg-transparent p-4 z-50" >
+    <div id="SmallSearch" className="displayNone lg:flex w-full lg:w-[40%] h-screen lg:h-auto fixed lg:relative flex-col top-0 left-0 bg-[#fff] lg:bg-transparent p-4 z-50" >
       <InstantSearch searchClient={searchClient} indexName="Production_Worker">
 
         {/* Mobile Search */}
-        <div className="flex md:hidden flex-col w-full max-w-[720px] relative">
+        <div className="flex lg:hidden flex-col w-full max-w-[950px] relative">
           {/* Mobile Search Input */}
-          <div ref={searchRef} className="flex md:hidden justify-between items-center w-full h-14 bg-white shadow-md border-2 rounded-full px-4" >
+          <div ref={searchRef} className="flex lg:hidden justify-between items-center w-full h-14 bg-white shadow-md border-2 rounded-full px-4" >
             <img src={LeftArrow} className="h-5 cursor-pointer" alt="close" onClick={CloseSmallSearch}/>
             <input type="text" value={query} onChange={handleSearchBoxChange} className="w-full ml-4 text-gray-800 placeholder-gray-500 bg-transparent focus:outline-none" placeholder={placeholder}/>
           </div>
 
           {/* Mobile Search Results */}
           {showHits && (
-            <div ref={hitsRef} className="md:hidden bg-white shadow-lg mt-3 max-h-[80vh] overflow-y-auto"  id="NoScroll">
+            <div ref={hitsRef} className="lg:hidden bg-white shadow-lg mt-3 max-h-[80vh] overflow-y-auto"  id="NoScroll">
               <Hits hitComponent={HitItem} />
             </div>
           )}

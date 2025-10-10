@@ -310,6 +310,7 @@ function UpdateLocation() {
       await loadScript(src);
       if (!window.google || !window.google.maps || typeof window.google.maps.Geocoder !== "function")
         throw new Error("Google Maps library not available after loading.");
+      
       const geocoder = new window.google.maps.Geocoder();
       return new Promise((resolve, reject) => {
         geocoder.geocode({ location: coords }, (results, geocodeStatus) => {
