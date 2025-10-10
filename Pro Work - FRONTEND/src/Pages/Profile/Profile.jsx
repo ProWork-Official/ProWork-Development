@@ -84,9 +84,9 @@ function Profile() {
 
         <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
           <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
-            <h2 className='text-sm sm:text-xl w-full text-start '>{PersonalFormData ? PersonalFormData.Name : 'Complete Your Profile'}</h2>
-            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>{PersonalFormData ? PersonalFormData.Email : ''}</p> }
-            {PersonalFormData ?
+            <h2 className='text-sm sm:text-xl w-full text-start '>{PersonalFormData.Name ? PersonalFormData.Name : 'Complete Your Profile'}</h2>
+            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>{PersonalFormData.Email ? PersonalFormData.Email : ''}</p> }
+            {PersonalFormData.Name ?
             <Link to='/account/my-profile'>
               <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Edit Profile</button>
             </Link>
@@ -137,7 +137,7 @@ function Profile() {
                   <div className="flex w-full justify-center">
                     <fieldset className="h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8">
                       <legend className="text-[#33806b]">Phone Number</legend>
-                      <input className="border-0 focus:outline-none w-[95%] text-[#33806b] placeholder-[#33806b]" name="Name" placeholder="+91-9450066558" type="text" />
+                      <input className="border-0 focus:outline-none w-[95%] text-[#33806b] placeholder-[#33806b]" name="Name" placeholder={`+91-${UserData.UserNumber}`} type="text" />
                     </fieldset>
                   </div>
                   {/* {error.Name && <span className="errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4">{error.Name}</span>} */}

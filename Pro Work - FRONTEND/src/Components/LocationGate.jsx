@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { MyContext } from "../ContextAPI";
 
 import ProworkLogo from '../Assets/ProworkLogo.png';
 
@@ -40,6 +41,8 @@ export const loadScript = (src) => {
 };
 
 export default function LocationGate({ children }) {
+
+  const {setAdss} = useContext(MyContext)
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -102,6 +105,7 @@ export default function LocationGate({ children }) {
 
             // You can store or display the addressTitle in your UI
             // For example, you can set it in state to render it in the component
+            setAdss(formattedAddress)
             setMessage(addressTitle);  // Setting it as the message for now (you can display it as needed)
 
             // Check if in Prayagraj/Allahabad and Uttar Pradesh

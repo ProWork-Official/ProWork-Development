@@ -198,7 +198,7 @@ function Navbar() {
                     <div className=' w-full text-[12px] xxxs:text-[14px] md:text-sm text-[#f2da1d] leading-loose'>Your Location</div>
                     <div className='text-[10px] xxxs:text-[12px] font-bold md:text-sm font-sans text-[#33806b] flex justify-between items-center'>
                         <span title={addss || ""}>
-                            {extractLocation1(addss? addss : previousAddss)} - {addss ? extractLocation2(addss) : previousAddss? extractLocation2(previousAddss) : "Select your location"}
+                            {extractLocation1(addss? `${addss} ` : `${previousAddss}`)} - {addss ? extractLocation2(addss) : previousAddss? extractLocation2(previousAddss) : "Select your location"}
                         {/* {addss ? truncateAddress(addss, 2) : previousAddss? truncateAddress(previousAddss, 3) : "Select your location"} */}
                         </span>
                         <img src={DownArrow} alt="" className='h-5' />
