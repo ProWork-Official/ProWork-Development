@@ -13,6 +13,7 @@ import Office from '../Assets/office.png'
 import Other from '../Assets/other.png'
 import CustomMarkerImg from "../Assets/gps.png"; // marker png image
 import Pin from "../Assets/pin.png"; // marker png image
+import Maps from '../Assets/maps.png'
 
 function UpdateLocation() {
   const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
@@ -609,8 +610,15 @@ function UpdateLocation() {
         {/* Address details form (shown after Confirm & Continue in Add New Address flow) */}
         {showAddressForm && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-50">
-            <form onSubmit={handleSaveAddress} className="bg-white w-[95%] sm:w-[90%] max-w-lg rounded-lg p-5 shadow-lg">
+            <form onSubmit={handleSaveAddress} className="bg-white w-full h-full sm:w-[90%] max-w-lg rounded-lg p-5 shadow-lg">
               <h3 className="text-lg font-semibold mb-3">Add Address Details</h3>
+
+              <div className="w-full h-16 mb-2 rounded-lg border border-[#f2da1d]">
+                <div className="flex h-full w-[20%] justify-center items-center border border-red-700">
+                  <img src={Maps} alt="" className="h-12"/>
+                </div>
+                  <div className="w-[80%]"></div>
+              </div>
 
               <div className="mb-3">
                 <label className="block text-sm font-medium mb-1">Save Address as</label>
@@ -661,7 +669,7 @@ function UpdateLocation() {
               </div>
 
               <div className="flex gap-3 justify-end mt-4">
-                <button
+                {/* <button
                   type="button"
                   onClick={() => {
                     setShowAddressForm(false);
@@ -670,8 +678,8 @@ function UpdateLocation() {
                   className="px-4 py-2 rounded-md border"
                 >
                   Edit
-                </button>
-                <button type="submit" className="px-4 py-2 rounded-md bg-[#42DCB3] text-white">
+                </button> */}
+                <button type="submit" className="px-4 w-full py-2 rounded-md bg-[#33806b] text-[#f2da1d]">
                   Save Address
                 </button>
               </div>
