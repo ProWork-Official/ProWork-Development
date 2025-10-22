@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { MyContext } from './ContextAPI';
 
 // Utils
-import UserInfo from './Utils/UserInfo';
+//import UserInfo from './Utils/UserInfo';
 import WorkerInfo from './Utils/WorkerInfo';
 
 // Components
@@ -43,7 +43,7 @@ function App() {
       <Helmet><title>Pro Work - Worker</title></Helmet>
       <Toaster/>
 
-      <UserInfo />
+      {/* <UserInfo /> */}
       <WorkerInfo />
 
       <Navbar />

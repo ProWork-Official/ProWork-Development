@@ -5,22 +5,22 @@ import { Helmet } from 'react-helmet'
 import axios from 'axios'
 
 // Utils
-import UserInfo from '../../Utils/UserInfo.jsx'
+//import UserInfo from '../../Utils/UserInfo.jsx'
 
 import ProworkLogo from '../../Assets/ProworkLogo.png';
 
 // Components
 import ProfileBlock from '../../Components/ProfileBlock/ProfileBlock'
-import PersonalForm from '../../Components/UserForm/PersonalForm'
-import PersonalLabel from '../../Components/UserForm/PersonalLabel'
-import PersonalFormEdit from '../../Components/UserForm/PersonalFormEdit'
-import AddressForm from '../../Components/UserForm/AddressForm'
-import AddressLabel from '../../Components/UserForm/AddressLabel'
-import AddressFormEdit from '../../Components/UserForm/AddressFormEdit'
+// import PersonalForm from '../../Components/UserForm/PersonalForm'
+// import PersonalLabel from '../../Components/UserForm/PersonalLabel'
+// import PersonalFormEdit from '../../Components/UserForm/PersonalFormEdit'
+// import AddressForm from '../../Components/UserForm/AddressForm'
+// import AddressLabel from '../../Components/UserForm/AddressLabel'
+// import AddressFormEdit from '../../Components/UserForm/AddressFormEdit'
 
 // Functions
 import { URL, toastFailure } from '../../func.jsx'
-import { togglePersonalForm, togglePersonalLabel, toggleAddressForm, toggleAddressLabel } from '../../Components/UserForm/funcUserForm'
+//import { togglePersonalForm, togglePersonalLabel, toggleAddressForm, toggleAddressLabel } from '../../Components/UserForm/funcUserForm'
 import { MyContext } from '../../ContextAPI'
 
 function Profile() {
@@ -66,7 +66,7 @@ function Profile() {
     <div className='flex flex-col w-screen '>
       <Helmet><title>Pro Work - My Profile</title></Helmet>
 
-      {PersonalFormData.isPersonal ?
+      {/* {PersonalFormData.isPersonal ?
         <div>{EditPersonalDetails ? <PersonalFormEdit /> : <PersonalLabel/> }</div>
         :  
         <PersonalForm/> 
@@ -76,7 +76,7 @@ function Profile() {
         <div> {EditAddressDetails ? <AddressFormEdit/> : <AddressLabel /> }</div>
         :  
         <AddressForm/> 
-      }
+      } */}
       
       <div className='w-full h-4/6 bg-white z-[45] flex flex-wrap justify-between' >
 
