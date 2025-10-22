@@ -256,65 +256,75 @@ export async function workerRegisterGet(req, res) {
   }
 }
 // function to edit worker/shop details
+// function to edit worker/shop details
 export async function workerRegisterPatch(req, res) {
-  const jwtPresent = req.cookies?.UserToken
+  const jwtPresent = req.cookies?.UserToken;
   if (!jwtPresent) return res.status(401).send({ message: 'Expired or Invalid Token, Please login again' });
       
-  try{
-    const currUserID = JWT.verify( jwtPresent, JWT_Secret ).UserObjectID;
-    let { ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, AadharFront, AadharBack, PanCard, ShopPhoto1, ShopPhoto2, ShopPhoto3, UserObjectID } = req.body;
+  try {
+    const currUserID = JWT.verify(jwtPresent, JWT_Secret).UserObjectID;
+    const { 
+      ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, 
+      FullName, ShopEmail, ShopPhoneNumber, UserObjectID 
+    } = req.body;
+
     if (UserObjectID !== currUserID) return res.status(403).send({ message: "Invalid user ID" });
-                
-    // Check if any image is updated, if yes then upload that updated image to cloudinary
-    if (req.files) {  
 
-      if (req.files.AadharFront) {
-        const AadharFrontFile = Array.isArray(req.files.AadharFront) ? req.files.AadharFront[0] : req.files.AadharFront;
-        if (!AadharFrontFile || !AadharFrontFile.mimetype) return res.status(400).send({ message: "Aadhar Card file is invalid" });
+    // 1. Start with all the text-based fields
+    const updateData = {
+      ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City,
+      FullName, ShopEmail, ShopPhoneNumber
+    };
 
-        AadharFront = await uploadFileToCloudinary(AadharFrontFile, `ProWork/${FullName}`);
+    // 2. Check req.files and ONLY add image fields if a new file is uploaded
+    if (req.files) {
+      const uploadFolder = `ProWork/${FullName || "unknown"}`;
+
+      // Helper to check and upload a file
+      async function uploadIfPresent(fileKey, fieldName) {
+        const file = pickFile(req.files[fileKey]); // Use your existing pickFile helper
+        if (file) {
+          if (!file.mimetype) {
+            throw new Error(`${fileKey} file is invalid`);
+          }
+          const uploadResult = await uploadFileToCloudinary(file, uploadFolder);
+          updateData[fieldName] = uploadResult.secure_url; // Add to updateData
+        }
       }
 
-      if (req.files.AadharBack) {
-        const AadharBackFile = Array.isArray(req.files.AadharBack) ? req.files.AadharBack[0] : req.files.AadharBack;
-        if (!AadharBackFile || !AadharBackFile.mimetype) return res.status(400).send({ message: "Aadhar Card file is invalid" });
-        
-        AadharBack = await uploadFileToCloudinary(OwnerAadharCardBackFile, `ProWork/${FullName}`);
-      }
-
-      if (req.files.PanCard) {
-          const PanCardFile = Array.isArray(req.files.PanCard) ? req.files.PanCard[0] : req.files.PanCard;
-          if (!PanCardFile || !PanCardFile.mimetype) return res.status(400).send({ message: "PAN Card file is invalid" });
-          PanCard = await uploadFileToCloudinary(PanCardFile, `ProWork/${FullName}`);
-      }
-        
-      if (req.files.ShopPhoto1) {
-        const ShopPhoto1File = Array.isArray(req.files.ShopPhoto1) ? req.files.ShopPhoto1[0] : req.files.ShopPhoto1;
-        if (!ShopPhoto1File || !ShopPhoto1File.mimetype) return res.status(400).send({ message: "ShopPhoto 1 file is invalid" });
-
-        ShopPhoto1 = await uploadFileToCloudinary(ShopPhoto1File, `ProWork/${FullName}`);
-      }  
-      if (req.files.ShopPhoto2) {
-        const ShopPhoto2File = Array.isArray(req.files.ShopPhoto2) ? req.files.ShopPhoto2[0] : req.files.ShopPhoto2;
-        if (!ShopPhoto2File || !ShopPhoto2File.mimetype) return res.status(400).send({ message: "ShopPhoto 2 file is invalid" });
-          
-        ShopPhoto2 = await uploadFileToCloudinary(ShopPhoto2File, `ProWork/${FullName}`);
-      }  
-      if (req.files.ShopPhoto3) {
-        const ShopPhoto3File = Array.isArray(req.files.ShopPhoto3) ? req.files.ShopPhoto3[0] : req.files.ShopPhoto3;
-        if (!ShopPhoto3File || !ShopPhoto3File.mimetype) return res.status(400).send({ message: "ShopPhoto 3 file is invalid" });
-          
-        ShopPhoto3 = await uploadFileToCloudinary(ShopPhoto3File, `ProWork/${FullName}`);
-      }     
+      // 3. Run the helper for all 6 image fields
+      // Using Promise.all to run uploads in parallel
+      await Promise.all([
+        uploadIfPresent('AadharFront', 'AadharFront'),
+        uploadIfPresent('AadharBack', 'AadharBack'),
+        uploadIfPresent('PanCard', 'PanCard'),
+        uploadIfPresent('ShopPhoto1', 'ShopPhoto1'),
+        uploadIfPresent('ShopPhoto2', 'ShopPhoto2'),
+        uploadIfPresent('ShopPhoto3', 'ShopPhoto3')
+      ]);
     }
-      
-    const updatedWorker = await Worker.findOneAndUpdate({UserObjectID: UserObjectID}, { AadharFront: AadharFront.secure_url, AadharBack: AadharBack.secure_url, PanCard: PanCard.secure_url, ShopPhoto1: ShopPhoto1.secure_url, ShopPhoto2: ShopPhoto2.secure_url, ShopPhoto3: ShopPhoto3.secure_url, ShopName, ShopDescription, ShopAddress, ShopCategory, Area, City, FullName, ShopEmail, ShopPhoneNumber, });
+
+    // 4. Perform the update with ONLY the fields that changed
+    const updatedWorker = await Worker.findOneAndUpdate(
+      { UserObjectID: UserObjectID }, 
+      { $set: updateData }, // Use $set to apply the changes
+      { new: true } // Return the updated document
+    );
     
+    if (!updatedWorker) {
+      return res.status(404).send({ message: "Worker not found to update." });
+    }
+
     console.log(`Worker updated successfully with Name ${updatedWorker.ShopName}`);        
     return res.status(201).send(updatedWorker);
+
   } catch(error) {
     console.log("Worker details not updated", error);
-    return res.status(500).send({ message: "Worker details not edited", error });
+    // Send a more specific error if it was our validation
+    if (error.message.includes("file is invalid")) {
+      return res.status(400).send({ message: error.message });
+    }
+    return res.status(500).send({ message: "Worker details not edited", error: error.message || error });
   }
 }
 
