@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { MyContext } from './ContextAPI';
 
 // Utils
-//import UserInfo from './Utils/UserInfo';
+import UserInfo from './Utils/UserInfo';
 import WorkerInfo from './Utils/WorkerInfo';
 
 // Components
@@ -17,6 +17,7 @@ import OTPForm from './Components/SignUpForm/OTPForm'
 
 // Pages
 import Profile from './Pages/Profile/Profile'
+import EditProfilePage from './Pages/Profile/EditProfile';
 import WorkerProfile from './Pages/WorkerProfile/WorkerProfile'
 import WorkerRegister from './Pages/WorkerRegister/WorkerRegister';
 import Error404 from './Pages/Error404/Error404'
@@ -43,7 +44,7 @@ function App() {
       <Helmet><title>Pro Work - Worker</title></Helmet>
       <Toaster/>
 
-      {/* <UserInfo /> */}
+      <UserInfo />
       <WorkerInfo />
 
       <Navbar />
@@ -65,6 +66,7 @@ function App() {
             <Route path='/payment_success?' element={<Success/>}/>
             <Route path='/payment_failed?' element={<Failed/>}/>
             <Route path='/my-profile/:id' element={<Profile/>}/>
+            <Route path="/my-profile/edit-profile" element={<EditProfilePage/>} /> 
             <Route path='/my-profile/:id/my-worker-profile/:id' element={<WorkerProfile/>}/>
             <Route path='/my-profile/:id/my-work/:id' element={<MyWork/>}/>
             <Route path='/my-profile/:id/my-worker-profile/:id/my-wallet' element={<Wallet/>}/>

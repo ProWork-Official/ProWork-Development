@@ -7,9 +7,6 @@ import UpdateLocation from '../UpdateLocation'
 // Styles
 import './Navbar.css'
 
-// Components
-import AlgoSearch from '../AlgoSearch/AlgoSearch'
-
 // Functions
 import { showSignUpForm } from '../SignUpForm/signUp'
 import { MyContext } from '../../ContextAPI'
@@ -22,8 +19,6 @@ import Close_Y from '../../Assets/close_Y.png';
 import Close_G from '../../Assets/close_G.png';
 import User_Y from '../../Assets/user_Y.png'
 import User_G from '../../Assets/user_G.png'
-import SearchIcon_Y from "../../Assets/nav_search_Y.png";
-import SearchIcon_G from "../../Assets/nav_search_G.png";
 import ProworkLogo from '../../Assets/ProworkLogo.png';
 import DownArrow from '../../Assets/down-arrow.png';    
 
@@ -34,17 +29,12 @@ function Navbar() {
   const [isHamOpen, setIsHamOpen] = useState(false); 
   const phoneListRef = useRef(null);
   
-  const [placeholder, setPlaceholder] = useState("Search");
 
   const [isUserHovered, setIsUserHovered] = useState(false);
-  const [isSearchHovered, setIsSearchHovered] = useState(false);
   const [isHamHovered, setIsHamHovered] = useState(false);
 
   const handleEnterUser = () => setIsUserHovered(true);
   const handleLeaveUser = () => setIsUserHovered(false);
-
-  const handleEnterSearch = () => setIsSearchHovered(true);
-  const handleLeaveSearch = () => setIsSearchHovered(false);
 
   const handleEnterHam = () => setIsHamHovered(true);
   const handleLeaveHam = () => setIsHamHovered(false);
@@ -106,15 +96,15 @@ function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-    const placeholders = [ "Search electricians", "Search plumbers", "What service are you looking for?", "What is your location?", "Try Searching area..." ];
-    let index = 0;
-    const interval = setInterval(() => {
-      setPlaceholder(placeholders[index]);
-      index = (index + 1) % placeholders.length;
-    }, 3000);
-    return () => clearInterval(interval);
-    }, []);
+    // useEffect(() => {
+    // const placeholders = [ "Search electricians", "Search plumbers", "What service are you looking for?", "What is your location?", "Try Searching area..." ];
+    // let index = 0;
+    // const interval = setInterval(() => {
+    //   setPlaceholder(placeholders[index]);
+    //   index = (index + 1) % placeholders.length;
+    // }, 3000);
+    // return () => clearInterval(interval);
+    // }, []);
 
     const scrollTop0 = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -126,11 +116,6 @@ function Navbar() {
         }
     }
 
-    function ShowSmallSearch(){
-        const SmallSearch = document.getElementById('SmallSearch')
-        SmallSearch.classList.add('displayFlex')
-        SmallSearch.classList.remove('displayNone')
-    }
 
     const previousAddss = localStorage.getItem("selected_address");
 
@@ -205,9 +190,6 @@ function Navbar() {
                     </div>
                 </div>
 
-                {/* Search Component */}
-                <AlgoSearch isScrolled={isScrolled} />
-
                 {/* Phone Navbar */}
                 <div className='flex sm:hidden justify-between items-center'>
                     <div className='flex justify-between items-center w-full'>
@@ -246,7 +228,6 @@ function Navbar() {
                 <div id='PhoneList' ref={phoneListRef} className={`fixed top-20 left-0 w-full h-[calc(100vh-5rem)] bg-white text-black transition-transform duration-300 ease-in-out ${isHamOpen ? 'nav-phone-list-moveDown' : 'nav-phone-list-moveUp'}`}>
                     <div className="flex flex-col p-8 space-y-6">
                         <Link className="text-2xl text-[#33806b] hover:text-[#f2da1d] transition-colors" onClick={ () => { toggleNavbarMenu(); scrollTop0() }} to="/">HOME</Link>
-                        <Link className="text-2xl text-[#33806b] hover:text-[#f2da1d] transition-colors" onClick={ () => { toggleNavbarMenu(); scrollTop0() }} to="/services">SERVICES</Link>
                         <Link className="text-2xl text-[#33806b] hover:text-[#f2da1d] transition-colors" onClick={ () => { toggleNavbarMenu(); scrollTop0() }} to='/explore'>EXPLORE</Link>
                         <Link className="text-2xl text-[#33806b] hover:text-[#f2da1d] transition-colors" onClick={ () => { toggleNavbarMenu(); scrollTop0() }} to="/about-us">ABOUT US</Link>
                     </div>
@@ -254,15 +235,6 @@ function Navbar() {
 
                 {/* Desktop Navbar */}
                 <div className='hidden sm:flex justify-evenly items-center sm:w-[65%] md:w-[55%] lg:w-[50%]'>
-                <label htmlFor="searchInput" className="lg:hidden justify-center items-center" onClick={ShowSmallSearch}>
-                    <img  className="h-9 cursor-pointer" 
-                        src={ isScrolled ? (isSearchHovered ? SearchIcon_Y : SearchIcon_G) : (isSearchHovered ? SearchIcon_G : SearchIcon_Y) }   
-                        alt="search" 
-                        onMouseEnter={handleEnterSearch}
-                        onMouseLeave={handleLeaveSearch} 
-                    />
-                </label>
-                <Link to='/services'><span className={`text-sm lg:text-base ${isScrolled ? 'text-[#33806B]' : 'text-[#f2da1d]'} ${isScrolled ? 'hover:text-[#f2da1d]' : 'hover:text-[#33806B]'} transition-colors`} onClick={scrollTop0}>SERVICES</span></Link>
                 <Link to='/explore'><span className={`text-sm lg:text-base ${isScrolled ? 'text-[#33806B]' : 'text-[#f2da1d]'} ${isScrolled ? 'hover:text-[#f2da1d]' : 'hover:text-[#33806B]'} transition-colors`} onClick={scrollTop0}>EXPLORE</span></Link>
                 <Link to='/about-us'><span className={`text-sm lg:text-base ${isScrolled ? 'text-[#33806B]' : 'text-[#f2da1d]'} ${isScrolled ? 'hover:text-[#f2da1d]' : 'hover:text-[#33806B]'} transition-colors`} onClick={scrollTop0}>ABOUT US</span></Link>
 
@@ -281,21 +253,6 @@ function Navbar() {
                 }
             </div>
         </div>
-            <div className='flex sm:hidden justify-between items-center h-1/3 w-full max-w-[1250px] mx-auto px-4 xl:px-0 '>
-               
-                <div className='flex items-center pl-1 border rounded-full border-[#33806b] w-full h-[80%]'>
-                    <label htmlFor="searchInput" className="md:hidden flex justify-center items-center" onClick={ShowSmallSearch}>
-                        <img  
-                            className="h-6 cursor-pointer" 
-                            src={ isScrolled ? (isSearchHovered ? SearchIcon_Y : SearchIcon_G)  : (isSearchHovered ? SearchIcon_G : SearchIcon_Y) }
-                            alt="search" 
-                            onMouseEnter={handleEnterSearch}
-                            onMouseLeave={handleLeaveSearch} 
-                        />
-                        <input type="text" className="w-full ml-4 text-gray-800 placeholder-gray-500 text-xs bg-transparent focus:outline-none" placeholder={placeholder}/>
-                    </label>
-                </div>
-            </div>
         </div>
 
         {/* ---------- modal (search -> map) ---------- */}
