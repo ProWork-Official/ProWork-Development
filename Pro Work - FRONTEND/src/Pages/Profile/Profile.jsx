@@ -137,7 +137,14 @@ function Profile() {
                   <div className="flex w-full justify-center">
                     <fieldset className="h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8">
                       <legend className="text-[#33806b]">Phone Number</legend>
-                      <input className="border-0 focus:outline-none w-[95%] text-[#33806b] placeholder-[#33806b]" name="Name" placeholder="+91-9450066558" type="text" />
+                      <input
+                        className="border-0 focus:outline-none w-[95%] text-[#33806b] placeholder-[#33806b]"
+                        name="PhoneNumber"
+                        placeholder="+91-9450066558"
+                        type="text"
+                        value={UserData?.UserNumber || ''}
+                        readOnly
+                      />
                     </fieldset>
                   </div>
                   {/* {error.Name && <span className="errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4">{error.Name}</span>} */}

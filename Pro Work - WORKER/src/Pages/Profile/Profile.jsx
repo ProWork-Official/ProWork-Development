@@ -11,13 +11,13 @@ import ProworkLogo from '../../Assets/ProworkLogo.png';
 
 // Components
 import ProfileBlock from '../../Components/ProfileBlock/ProfileBlock'
-import PersonalForm from '../../Components/UserForm/PersonalForm'
-import PersonalLabel from '../../Components/UserForm/PersonalLabel'
-import PersonalFormEdit from '../../Components/UserForm/PersonalFormEdit'
+// import PersonalForm from '../../Components/UserForm/PersonalForm'
+// import PersonalLabel from '../../Components/UserForm/PersonalLabel'
+// import PersonalFormEdit from '../../Components/UserForm/PersonalFormEdit'
 
 // Functions
 import { URL, toastFailure } from '../../func.jsx'
-import { togglePersonalForm, togglePersonalLabel} from '../../Components/UserForm/funcUserForm'
+// import { togglePersonalForm, togglePersonalLabel} from '../../Components/UserForm/funcUserForm'
 import { MyContext } from '../../ContextAPI'
 
 function Profile() {
@@ -63,11 +63,11 @@ function Profile() {
     <div className='flex flex-col w-screen '>
       <Helmet><title>Pro Work - My Profile</title></Helmet>
 
-      {PersonalFormData.isPersonal ?
+      {/* {PersonalFormData.isPersonal ?
         <div>{EditPersonalDetails ? <PersonalFormEdit /> : <PersonalLabel/> }</div>
         :  
         <PersonalForm/> 
-      }
+      } */}
 
       
       <div className='w-full h-4/6 bg-white z-[45] flex flex-wrap justify-between' >

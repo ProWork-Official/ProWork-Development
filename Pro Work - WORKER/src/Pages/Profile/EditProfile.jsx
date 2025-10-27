@@ -1,6 +1,6 @@
 // WORKER/src/Pages/EditProfile.jsx
 import React, { useState, useContext, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet'
 import axios from 'axios'
 
@@ -30,8 +30,14 @@ export default function EditProfilePage(){
     removeSessionID
   } = useContext(MyContext)
 
+  const navigate = useNavigate()
+
   const [form, setForm] = useState({ Name: '', Email: '', PhoneNumber: '' })
   const [errors, setErrors] = useState({})
+
+  // Delete account UI state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(()=>{
     // prefill with context values when available
@@ -42,6 +48,7 @@ export default function EditProfilePage(){
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [PersonalFormData, UserData])
+  const emailLocked = Boolean(PersonalFormData?.Email || PersonalFormData?.email);
 
   // Logout re-used from other files (keeps behaviour consistent)
   async function LogOut(){
@@ -180,6 +187,39 @@ export default function EditProfilePage(){
     )
   }
 
+  // Delete account handler (same behavior as in MyProfile.jsx)
+  const handleDeleteAccount = async () => {
+    if (!UserData?.UserObjectID) return;
+    setDeleting(true);
+    try {
+      const resp = await axios.delete(`${URL}/user/delete`, { withCredentials: true });
+      if (resp.status === 204 || resp.status === 200) {
+        // clear client-side storage
+        try {
+          localStorage.removeItem("selected_address");
+          localStorage.removeItem("selected_coords");
+          localStorage.removeItem("saved_addresses");
+        } catch(e) {}
+        // clear session/cookies in app context
+        removeSessionID && removeSessionID("SessionID");
+        setSendOTP && setSendOTP(false);
+        setPhoneNumber && setPhoneNumber("");
+        setIsModalOpen(false);
+        // navigate home after delete
+        navigate("/", { replace: true });
+      } else {
+        toastFailure("Could not delete account. Try again.");
+      }
+    } catch (err) {
+      console.error("Error deleting account:", err);
+      const srvMsg = err?.response?.data?.message;
+      if (srvMsg) toastFailure(srvMsg);
+      else toastFailure("Error deleting account. Try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className='flex flex-wrap w-screen'>
       <Helmet><title>Pro Work - Edit Profile</title></Helmet>
@@ -193,7 +233,7 @@ export default function EditProfilePage(){
       </div>
 
       {/* Left Part */}
-      <div className='w-full mmd:w-[50%] lg:w-[40%] z-50 bg-white'>
+      <div className='hidden md:block md:w-[50%] lg:w-[40%] z-50 bg-white'>
         <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]'>
           <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
             <h1 className='text-[#33806b] text-4xl sm:text-6xl'>P</h1>
@@ -204,7 +244,7 @@ export default function EditProfilePage(){
           <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
             <h2 className='text-sm sm:text-xl w-full text-start '>{form.Name || 'Complete Your Profile'}</h2>
             <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>{form.Email || ''}</p>
-            <Link to='/account/edit-profile'>
+            <Link to='/my-profile/edit-profile'>
               <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Edit Profile</button>
             </Link>
           </div>
@@ -234,7 +274,7 @@ export default function EditProfilePage(){
       </div>
 
       {/* Right Part - Inline form */}
-      <div className="hidden md:flex flex-wrap md:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
+      <div className="w-full md:flex flex-wrap md:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
         <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]' />
         <div className='w-full h-full px-8 py-4'>
           <div className='w-full h-full border border-[#33806b] rounded-lg relative '>
@@ -268,17 +308,21 @@ export default function EditProfilePage(){
 
                   <div className='flex w-full flex-wrap justify-center'>
                     <div className='flex w-full justify-center'>
-                      <fieldset className=' h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8'>
+                       <fieldset className=' h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8'>
                         <legend className='text-[#33806b]'>Email</legend>
                         <input
-                          className='border-0 focus:outline-none w-[95%] text-[#33806b] cursor-pointer'
+                          readOnly={emailLocked}
+                          className={`border-0 focus:outline-none w-[95%] text-[#33806b] ${emailLocked ? 'cursor-not-allowed' : ''}`}
                           name='Email'
                           placeholder='Enter email'
                           type='text'
                           value={form.Email}
-                          onClick={() => toastFailure('Email cannot be changed')}
-                          onFocus={() => toastFailure('Email cannot be changed')}
-                          onChange={() => toastFailure('Email cannot be changed')}
+                          onChange={(e) => {
+                            // allow changes only when email is not yet saved
+                            if (!emailLocked) handleChange(e)
+                          }}
+                          onClick={() => { if (emailLocked) toastFailure('Email cannot be changed') }}
+                          onFocus={() => { if (emailLocked) toastFailure('Email cannot be changed') }}
                         />
                       </fieldset>
                     </div>
@@ -310,6 +354,47 @@ export default function EditProfilePage(){
                   </div>
 
                 </form>
+
+                {/* Delete account UI (same behavior as MyProfile.jsx) */}
+                <div className="w-full flex flex-wrap mt-8 px-4">
+                  <div className="w-full flex items-start justify-between">
+                    <button onClick={() => setIsModalOpen(true)} className="text-[#e45b5b]">
+                      Delete Account
+                    </button>
+                  </div>
+                  <h2 className="w-full text-xs text-neutral-500 mt-2">Deleting your account will remove all your bookings, wallet amount and any reviews created by you.</h2>
+                </div>
+
+                {/* Confirmation Modal */}
+                {isModalOpen && (
+                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[95%] sm:w-1/3">
+                      <h2 className="text-xl font-bold text-center text-red-600">Confirm Account Deletion</h2>
+                      <p className="mt-4 text-center text-gray-800">
+                        Once you confirm, your Pro Work account and all associated data will be permanently removed. This action cannot be undone. Do you want to continue?
+                      </p>
+
+                      <div className="mt-6 flex justify-center space-x-4">
+                        <button
+                          onClick={handleDeleteAccount}
+                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:opacity-60"
+                          disabled={deleting}
+                        >
+                          {deleting ? "Deleting..." : "Confirm Delete"}
+                        </button>
+
+                        <button
+                          onClick={() => setIsModalOpen(false)}
+                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                          disabled={deleting}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
 
             </div>

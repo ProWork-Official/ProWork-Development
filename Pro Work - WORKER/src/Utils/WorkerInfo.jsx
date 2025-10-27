@@ -20,8 +20,9 @@ function WorkerInfo({id}) {
       try{
         const workerResponse = await fetch(`${URL}/worker/register`, { credentials: 'include', headers: { 'Content-Type': 'multipart/form-data' } });
         if (workerResponse.status == 200) {
-          const workerData = await workerResponse.json();          
-          setWorkerFormData({ UserObjectID: workerData[0].UserObjectID, WorkerObjectID: workerData[0]._id, ShopName: workerData[0].ShopName, ShopDescription: workerData[0].ShopDescription, ShopAddress: workerData[0].ShopAddress, ShopCategory: workerData[0].ShopCategory, Area: workerData[0].Area, City: workerData[0].City, FullName: workerData[0].FullName, ShopEmail: workerData[0].ShopEmail, ShopPhoneNumber: workerData[0].ShopPhoneNumber, AadharFront: workerData[0].AadharFront, AadharBack: workerData[0].AadharBack, ShopPhoto1: workerData[0].ShopPhoto1 ,ShopPhoto2: workerData[0].ShopPhoto2, ShopPhoto3: workerData[0].ShopPhoto3, isWorker: workerData[0].isWorker});
+          const workerData = await workerResponse.json();   
+          console.log       
+          setWorkerFormData({ UserObjectID: workerData[0].UserObjectID, WorkerObjectID: workerData[0]._id, ShopName: workerData[0].ShopName, ShopDescription: workerData[0].ShopDescription, ShopAddress: workerData[0].ShopAddress, ShopCategory: workerData[0].ShopCategory, Area: workerData[0].Area, City: workerData[0].City, FullName: workerData[0].FullName, ShopEmail: workerData[0].ShopEmail, ShopPhoneNumber: workerData[0].ShopPhoneNumber, AadharFront: workerData[0].AadharFront, AadharBack: workerData[0].AadharBack, PanCard: workerData[0].PanCard, ShopPhoto1: workerData[0].ShopPhoto1 ,ShopPhoto2: workerData[0].ShopPhoto2, ShopPhoto3: workerData[0].ShopPhoto3, isWorker: workerData[0].isWorker});
           workerPresent = workerData[0].isWorker
         } else if(workerResponse.status == 401 || workerResponse.status == 500){
           const workerData = await workerResponse.json();

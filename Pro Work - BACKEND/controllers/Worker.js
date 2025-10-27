@@ -247,6 +247,7 @@ export async function workerRegisterGet(req, res) {
     const currUserID = JWT.verify( jwtPresent, JWT_Secret ).UserObjectID;
     const currWorker = await Worker.find({UserObjectID: currUserID});
     if(currWorker[0] == undefined) return res.status(204).send();
+    console.log(currWorker)
           
     console.log(`Worker details are sent successfully`);
     return res.status(200).send(currWorker)    

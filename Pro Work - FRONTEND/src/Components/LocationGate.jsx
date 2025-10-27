@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
-import { MyContext } from "../ContextAPI";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import ProworkLogo from '../Assets/ProworkLogo.png';
@@ -46,7 +45,6 @@ export default function LocationGate({ children }) {
   const location = useLocation();
   const [status, setStatus] = useState("checking"); // checking | allowed | denied | outside | error
   const [message, setMessage] = useState("");
-  const { setAdss } = useContext(MyContext); // Add this
 
   useEffect(() => {
     const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -98,9 +96,6 @@ export default function LocationGate({ children }) {
 
             // Create a cleaner, simpler address
             const formattedAddress = `${route} ${locality}, ${state}, ${country}`;
-            localStorage.setItem("selected_address", formattedAddress);
-            localStorage.setItem("selected_coords", `${lat},${lng}`);
-            setAdss(formattedAddress); // Update context
 
             // Create a head title for the address
             const addressTitle = `Location: ${formattedAddress}`;
@@ -146,13 +141,8 @@ export default function LocationGate({ children }) {
     
     // If a manually-selected location exists in localStorage, use it
     const selected = localStorage.getItem("selected_coords");
-    const selectedAddress = localStorage.getItem("selected_address");
-    if (selected && selectedAddress) {
-      setAdss(selectedAddress); // Use the address from localStorage
-      setStatus("allowed");
-      return;
-    } else if (selected) {
-      // fallback: reverse-geocode if address missing
+    // console.log("Stored selected coords:", selected);
+    if (selected) {
       const [latStr, lngStr] = selected.split(",").map((s) => s.trim());
       const lat = parseFloat(latStr);
       const lng = parseFloat(lngStr);
@@ -160,6 +150,7 @@ export default function LocationGate({ children }) {
         processCoords(lat, lng);
         return;
       } else {
+        // invalid stored coords — clear and continue to real geolocation
         localStorage.removeItem("selected_coords");
       }
     }

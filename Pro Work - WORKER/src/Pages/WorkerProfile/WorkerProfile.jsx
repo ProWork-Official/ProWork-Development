@@ -22,7 +22,9 @@ function WorkerProfile() {
   useEffect(() => {
     console.log("WorkerFormData in WorkerProfile:", WorkerFormData);
   }, [WorkerFormData]);
+  
 
+  console.log(WorkerFormData)
 
 
   return (
@@ -92,7 +94,7 @@ function WorkerProfile() {
 
               <div className="col-span-2 sm:col-span-3 lg:col-span-2">
                 <label className="block text-sm font-medium text-gray-900">Area</label>
-                <span className='mt-2 block px-2 w-full rounded-md border-0 py-1.5 ring-1 ring-inset ring-gray-300 text-gray-900 shadow-sm'>{WorkerFormData.Area.join(', ')}</span>
+                <span className='mt-2 block px-2 w-full rounded-md border-0 py-1.5 ring-1 ring-inset ring-gray-300 text-gray-900 shadow-sm'>{Array.isArray(WorkerFormData.Area) ? WorkerFormData.Area.join(', ') : (WorkerFormData.Area || '')}</span>
               </div>
 
               <div className="col-span-2 sm:col-span-3 lg:col-span-2">
@@ -145,7 +147,7 @@ function WorkerProfile() {
                   {/* Pan Card */}
                   <div className="flex-1 min-w-[180px] max-w-sm bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col items-center p-4 transition-transform hover:scale-105"> {/* Increased max-w, shadow, padding */}
                     <img
-                      src={WorkerFormData.PanCard || ""}
+                      src={(WorkerFormData.PanCard && WorkerFormData.PanCard.startsWith('http')) ? WorkerFormData.PanCard : ''}
                       alt="Owner's Pan Card"
                       className="object-cover rounded-lg h-52 w-full border-2 border-gray-300" // Increased height, border thickness
                     />
