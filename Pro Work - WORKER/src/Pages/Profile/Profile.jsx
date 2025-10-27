@@ -129,7 +129,52 @@ function Profile() {
             <ProfileBlock heading1='Customer Support' />
           </Link> 
         </div>
+
+        {/* Right Part */}
+      <div className="hidden md:flex flex-wrap md:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
+
+        {/* <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]' /> */}
+        
+        <div className='w-full h-full px-8 py-4'>
+          <div className='w-full h-full border border-[#33806b] rounded-lg relative '>
+            <div className=' w-full h-full overflow-y-auto'>
+
+              {/* Title */}
+              <h1 className='text-lg text-[#33806b] bg-white mb-4 rounded-t-lg shadow-lg py-2 px-4 absolute w-full top-0 left-0'>
+                Account
+              </h1>
+
+              {/* Content */}
+              <div className='pt-16 px-4 pb-4 flex flex-col justify-center'>
+
+
+                <div className="flex w-full flex-wrap justify-center">
+                  <div className="flex w-full justify-center">
+                    <fieldset className="h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8">
+                      <legend className="text-[#33806b]">Phone Number</legend>
+                      <input
+                        className="border-0 focus:outline-none w-[95%] text-[#33806b] placeholder-[#33806b]"
+                        name="PhoneNumber"
+                        placeholder="+91-9450066558"
+                        type="text"
+                        value={UserData?.UserNumber || ''}
+                        readOnly
+                      />
+                    </fieldset>
+                  </div>
+                  {/* {error.Name && <span className="errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4">{error.Name}</span>} */}
+                </div> 
+                
+
+                
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+
+      
     </div>
   )
 }

@@ -1,3 +1,4 @@
+// WORKER/src/Pages/EditProfile.jsx
 import React, { useState, useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet'
@@ -15,11 +16,6 @@ import ProfileBlock from '../../Components/ProfileBlock/ProfileBlock'
 // Functions / Context
 import { URL, toastSuccess, toastFailure } from '../../func.jsx'
 import { MyContext } from '../../ContextAPI'
-
-// EditProfile page (Worker app)
-// Layout closely follows FRONTEND/src/pages/Profile.jsx but renders an inline
-// personal-details form (create + edit) using the same endpoints used by
-// PersonalForm and PersonalFormEdit.
 
 export default function EditProfilePage(){
   const {
@@ -44,7 +40,7 @@ export default function EditProfilePage(){
       Email: PersonalFormData?.Email || PersonalFormData?.email || '',
       PhoneNumber: UserData?.UserNumber || ''
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [PersonalFormData, UserData])
 
   // Logout re-used from other files (keeps behaviour consistent)
@@ -95,40 +91,82 @@ export default function EditProfilePage(){
     try{
       const UserObjectID = UserData?.UserObjectID
 
+      // Build payloads in the exact shape used by the modal components
       if(PersonalFormData?.isPersonal){
-        // edit
-        const body = { EditPersonalFormData: { Name: form.Name, Email: form.Email, PhoneNumber: form.PhoneNumber }, UserObjectID }
-        const res = await fetch(`${URL}/user/personal/edit`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) })
+        // EDIT - keep names identical to PersonalFormEdit
+        const EditPersonalFormData = {
+          Name: form.Name,
+          Email: form.Email || PersonalFormData?.Email,
+          PhoneNumber: form.PhoneNumber || UserData?.UserNumber
+        }
+
+        const res = await fetch(`${URL}/user/personal/edit`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ EditPersonalFormData, UserObjectID })
+        })
+
+        // read response body if any (helps ensure backend actually saved it)
+        const resBody = await res.json().catch(()=>null)
+
         if(res.status === 201){
           toastSuccess('Personal details updated successfully')
-          setPersonalFormData({ Name: form.Name, Email: form.Email, isPersonal: true })
+
+          // Prefer server returned object if provided, else update from submitted data
+          if(resBody && (resBody.personal || resBody.data)){
+            const serverPersonal = resBody.personal || resBody.data
+            setPersonalFormData({ ...serverPersonal, isPersonal: true })
+          } else {
+            setPersonalFormData({ ...EditPersonalFormData, isPersonal: true })
+          }
         } else {
-          const data = await res.json().catch(()=>({ message: 'Unknown error' }))
-          toastFailure(data.message || 'Something went wrong')
+          console.error('EditProfile - edit response:', res.status, resBody)
+          toastFailure(resBody?.message || 'Something went wrong while updating personal details')
         }
 
       } else {
-        // create
-        const body = { LocalPersonalFormData: { Name: form.Name, Email: form.Email, PhoneNumber: form.PhoneNumber }, UserObjectID }
-        const res = await fetch(`${URL}/user/personal`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) })
+        // CREATE - keep names identical to PersonalForm (LocalPersonalFormData)
+        const LocalPersonalFormData = {
+          Name: form.Name,
+          Email: form.Email,
+          isPersonal: true,
+          PhoneNumber: form.PhoneNumber || UserData?.UserNumber
+        }
+
+        const res = await fetch(`${URL}/user/personal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ LocalPersonalFormData, UserObjectID })
+        })
+
+        const resBody = await res.json().catch(()=>null)
+
         if(res.status === 201){
           toastSuccess('Personal details saved successfully')
-          setPersonalFormData({ Name: form.Name, Email: form.Email, isPersonal: true })
+
+          if(resBody && (resBody.personal || resBody.data)){
+            const serverPersonal = resBody.personal || resBody.data
+            setPersonalFormData({ ...serverPersonal, isPersonal: true })
+          } else {
+            setPersonalFormData({ ...LocalPersonalFormData, isPersonal: true })
+          }
         } else {
-          const data = await res.json().catch(()=>({ message: 'Unknown error' }))
-          toastFailure(data.message || 'Something went wrong')
+          console.error('EditProfile - create response:', res.status, resBody)
+          toastFailure(resBody?.message || 'Something went wrong while saving personal details')
         }
       }
 
     }catch(err){
-      console.error(err)
+      console.error('EditProfile - exception:', err)
       toastFailure('Something went wrong')
     }finally{
       setLoadingState(false)
     }
   }
 
-  if(!UserData.UserObjectID){
+  if(!UserData?.UserObjectID){
     return (
       <div className="flex flex-wrap justify-center items-center h-1/2 w-screen pt-20 p-6">
         <div className="w-screen overflow-x-auto shadow-shadow10px shadow-[#1d6955] rounded-xl bg-white" id='BookingTable'>
@@ -154,7 +192,7 @@ export default function EditProfilePage(){
         </div>
       </div>
 
-      {/* Left Part - profile card + nav links (copied from WORKER/profile.jsx structure) */}
+      {/* Left Part */}
       <div className='w-full mmd:w-[50%] lg:w-[40%] z-50 bg-white'>
         <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]'>
           <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
@@ -195,7 +233,7 @@ export default function EditProfilePage(){
         </div>
       </div>
 
-      {/* Right Part - Inline form with fields from PersonalForm + PersonalFormEdit */}
+      {/* Right Part - Inline form */}
       <div className="hidden md:flex flex-wrap md:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
         <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]' />
         <div className='w-full h-full px-8 py-4'>
@@ -215,7 +253,14 @@ export default function EditProfilePage(){
                     <div className='flex w-full justify-center'>
                       <fieldset className=' h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8'>
                         <legend className='text-[#33806b]'>Name</legend>
-                        <input className='border-0 focus:outline-none w-[95%] text-[#33806b]' name='Name' placeholder='Enter name' type='text' value={form.Name} onChange={handleChange} />
+                        <input
+                          className='border-0 focus:outline-none w-[95%] text-[#33806b]'
+                          name='Name'
+                          placeholder='Enter name'
+                          type='text'
+                          value={form.Name}
+                          onChange={handleChange}
+                        />
                       </fieldset>
                     </div>
                     {errors.Name && <span className='errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4'>{errors.Name}</span>}
@@ -225,7 +270,16 @@ export default function EditProfilePage(){
                     <div className='flex w-full justify-center'>
                       <fieldset className=' h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8'>
                         <legend className='text-[#33806b]'>Email</legend>
-                        <input className='border-0 focus:outline-none w-[95%] text-[#33806b]' name='Email' placeholder='Enter email' type='text' value={form.Email} onChange={handleChange} />
+                        <input
+                          className='border-0 focus:outline-none w-[95%] text-[#33806b] cursor-pointer'
+                          name='Email'
+                          placeholder='Enter email'
+                          type='text'
+                          value={form.Email}
+                          onClick={() => toastFailure('Email cannot be changed')}
+                          onFocus={() => toastFailure('Email cannot be changed')}
+                          onChange={() => toastFailure('Email cannot be changed')}
+                        />
                       </fieldset>
                     </div>
                     {errors.Email && <span className='errormassDiv text-red-500 mb-6 -mt-8 w-[95%] pl-4'>{errors.Email}</span>}
@@ -235,7 +289,16 @@ export default function EditProfilePage(){
                     <div className='flex w-full justify-center'>
                       <fieldset className=' h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8'>
                         <legend className='text-[#33806b]'>Phone Number</legend>
-                        <input className='border-0 focus:outline-none w-[95%] text-[#33806b]' name='PhoneNumber' placeholder='+91-xxxx' type='text' value={form.PhoneNumber} onChange={handleChange} />
+                        <input
+                          className='border-0 focus:outline-none w-[95%] text-[#33806b] cursor-pointer'
+                          name='PhoneNumber'
+                          placeholder='+91-xxxx'
+                          type='text'
+                          value={form.PhoneNumber}
+                          onClick={() => toastFailure('Phone number cannot be changed')}
+                          onFocus={() => toastFailure('Phone number cannot be changed')}
+                          onChange={() => toastFailure('Phone number cannot be changed')}
+                        />
                       </fieldset>
                     </div>
                   </div>
@@ -253,6 +316,7 @@ export default function EditProfilePage(){
           </div>
         </div>
       </div>
+
     </div>
   )
 }
