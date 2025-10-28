@@ -18,6 +18,7 @@ import paymentRouter from './routes/Payment.js'
 import callRouter from './routes/Call.js'
 import otpRouter from './routes/OTP.js';
 import AdminRouter from './routes/Admin.js';
+import contactRoutes from './routes/Contact.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -75,6 +76,7 @@ proworkBackend.use('/payment', paymentRouter);
 proworkBackend.use('/call', callRouter);
 proworkBackend.use('/otp', otpRouter);
 proworkBackend.use('/ayush-admin', AdminRouter);
+proworkBackend.use('/contact', contactRoutes);
 
 
 

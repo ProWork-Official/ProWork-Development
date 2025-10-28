@@ -357,62 +357,94 @@ export async function ServicePost(req, res) {
     const { Category, Services } = FinalServiceFormData;
 
     // Clean and enrich submitted services with OverCharge
-    const servicesWithOvercharges = Services.map(service => ({
+    const servicesWithOvercharges = (Services || []).map(service => ({
       ...service,
-      SubServices: service.SubServices.map(sub => ({
+      SubServices: (service.SubServices || []).map(sub => ({
         ...sub,
-        Details: sub.Details.map(detail => ({
+        Details: (sub.Details || []).map(detail => ({
           ...detail,
           OverCharge: getRandomOverCharge(detail.Charge)
         }))
       }))
     }));
 
-    // Save to MongoDB
-    const savedWorkerService = await new WorkerService({
-      Category,
-      Services: servicesWithOvercharges,
-      isService: true,
-      UserObjectID,
-      WorkerObjectID
-    }).save();
+    // Check if a WorkerService already exists for this worker
+    const existingService = await WorkerService.findOne({ WorkerObjectID });
 
-    // Count the new service category registration
-    const findWorker = await Worker.find({ _id: WorkerObjectID });
-    await CountService({ ServiceCategory: findWorker[0].ShopCategory });
+    let savedWorkerService;
+    let created = false;
 
-    // Update worker profile
-    const addedService = await Worker.findOneAndUpdate(
-      { _id: WorkerObjectID },
-      { isService: true },
-      { new: true }
-    );
+    if (existingService) {
+      // Update existing service document
+      savedWorkerService = await WorkerService.findOneAndUpdate(
+        { WorkerObjectID },
+        {
+          $set: {
+            Category: Category,
+            Services: servicesWithOvercharges,
+            isService: true
+          }
+        },
+        { new: true }
+      );
 
-    // Add to Algolia
-    const Algoliaresponse = await algoliaClient.addOrUpdateObject({
-      indexName: 'Production_Worker',
-      objectID: addedService._id,
-      body: {
-        ShopPhoto1: addedService.ShopPhoto1,
-        ShopName: addedService.ShopName,
-        Area: addedService.Area,
-        ShopCategory: addedService.ShopCategory
-      }
-    });
-
-    if (Algoliaresponse.objectID) {
-      console.log(`New worker added to Algolia successfully`);
+      // Mark worker record as having services (if not already)
+      await Worker.findOneAndUpdate({ _id: WorkerObjectID }, { isService: true }).catch(() => {});
+      created = false;
     } else {
-      console.log("Error in adding new worker to Algolia");
+      // Create new service document
+      savedWorkerService = await new WorkerService({
+        Category,
+        Services: servicesWithOvercharges,
+        isService: true,
+        UserObjectID,
+        WorkerObjectID
+      }).save();
+      created = true;
+
+      // Count the new service category registration
+      const findWorker = await Worker.find({ _id: WorkerObjectID });
+      if (findWorker && findWorker[0]) {
+        try {
+          await CountService({ ServiceCategory: findWorker[0].ShopCategory });
+        } catch (e) {
+          console.error("CountService failed:", e);
+        }
+      }
+
+      // Update worker profile
+      await Worker.findOneAndUpdate({ _id: WorkerObjectID }, { isService: true });
     }
 
-    console.log("Services added successfully");
-    return res.status(201).send(savedWorkerService);
+    // Add/update Algolia index (keep your existing call but handle safely)
+    try {
+      const addedService = await Worker.findOne({ _id: WorkerObjectID });
+      if (addedService) {
+        // your algolia call — wrap in try/catch to avoid breaking the request on failure
+        await algoliaClient.addOrUpdateObject({
+          indexName: 'Production_Worker',
+          objectID: addedService._id,
+          body: {
+            ShopPhoto1: addedService.ShopPhoto1,
+            ShopName: addedService.ShopName,
+            Area: addedService.Area,
+            ShopCategory: addedService.ShopCategory
+          }
+        }).catch((e) => console.log("Algolia add/update error:", e));
+      }
+    } catch (e) {
+      console.log("Algolia update skipped due to error:", e);
+    }
+
+    console.log(created ? "Services added successfully" : "Services updated successfully");
+    // Return 201 when created, 200 when updated
+    return res.status(created ? 201 : 200).send(savedWorkerService);
   } catch (error) {
-    console.error("Error in adding services, try again", error);
-    return res.status(500).send({ message: "Error in adding service", error });
+    console.error("Error in adding/updating services:", error);
+    return res.status(500).send({ message: "Error in adding/updating service", error });
   }
 }
+
 
 // function to send saved sub category details to frontend to its owner
 export async function ServiceGet(req, res) {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react'
-import {addservice_List} from '../../Assets/AddServiceList'
-import {URL,  toastSuccess, toastFailure } from '../../func.jsx';
+import { addservice_List } from '../../Assets/AddServiceList'
+import { URL, toastSuccess, toastFailure } from '../../func.jsx';
 import next_icon from '../../Assets/next.png'
 import { MyContext } from '../../ContextAPI';
 import loadState from '../../Assets/loadingState.gif';
@@ -8,11 +8,68 @@ import WorkerInfo from '../../Utils/WorkerInfo.jsx';
 
 import { toggleServiceForm } from './funcWorkerForm'
 
-
 function ServiceForm() {
-  const { loadingState, setLoadingState, UserData, WorkerFormData, setServiceFormData } = useContext(MyContext);
+  const {
+    loadingState,
+    setLoadingState,
+    UserData,
+    WorkerFormData,
+    ServiceFormData,    // <<-- read existing service data from context
+    setServiceFormData
+  } = useContext(MyContext);
+
   const [AddServiceFormData, setAddServiceFormData] = useState({});
   const [selectedServiceNames, setSelectedServiceNames] = useState(new Set());
+
+  // Helper to build a good key for a detail
+  const detailNameFromSaved = (detailObj) => {
+    return (detailObj?.Detail) || (detailObj?.DetailsName) || (detailObj?.DetailName) || (detailObj?.name) || '';
+  }
+
+  // When the component mounts or ServiceFormData changes, if there's existing service data
+  // pre-populate the selected groups and the price inputs for editing.
+  useEffect(() => {
+    if (ServiceFormData?.isService && Array.isArray(ServiceFormData.Services)) {
+      const selected = new Set();
+      const prefill = {};
+
+      ServiceFormData.Services.forEach((serviceGroup) => {
+        // serviceGroup.ServiceName may exist
+        if (serviceGroup?.ServiceName) selected.add(serviceGroup.ServiceName);
+
+        // If the saved group includes SubServices -> fill
+        if (Array.isArray(serviceGroup.SubServices)) {
+          serviceGroup.SubServices.forEach((sub) => {
+            const subName = sub?.Service || sub?.service || '';
+            // If sub.Details exists (array)
+            if (Array.isArray(sub.Details)) {
+              sub.Details.forEach((d) => {
+                const detailName = detailNameFromSaved(d);
+                if (detailName) {
+                  const key = `price_${subName}_${detailName}`;
+                  prefill[key] = (d?.Charge !== undefined && d?.Charge !== null) ? d.Charge : '';
+                }
+              });
+            } else {
+              // If sub itself has a charge (no Details array)
+              if (sub?.Charge !== undefined) {
+                // create a key using sub.Service and something reasonable (use 'price_<Service>_default')
+                const key = `price_${subName}_default`;
+                prefill[key] = sub.Charge;
+              }
+            }
+          });
+        } else if (serviceGroup?.Charge !== undefined) {
+          // Entire service group has Charge directly - create a sensible key
+          const key = `price_${serviceGroup.ServiceName}_default`;
+          prefill[key] = serviceGroup.Charge;
+        }
+      });
+
+      setSelectedServiceNames(new Set(Array.from(selected)));
+      setAddServiceFormData((prev) => ({ ...prev, ...prefill }));
+    }
+  }, [ServiceFormData]);
 
   const handleAddServiceFormInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,7 +82,6 @@ function ServiceForm() {
     (item) => item.Category === WorkerFormData.ShopCategory
   );
 
-  // Toggle selection of a service group (ServiceName)
   const toggleServiceGroup = (serviceName) => {
     setSelectedServiceNames((prev) => {
       const copy = new Set(Array.from(prev));
@@ -37,7 +93,6 @@ function ServiceForm() {
 
   const handleAddServiceSubmit = async (e) => {
     e.preventDefault();
-    console.log('Adding pricing Initiated');
     setLoadingState(true);
 
     if (!selectedCategory) {
@@ -52,16 +107,26 @@ function ServiceForm() {
       Services: selectedCategory.Services
         .filter((serviceGroup) => selectedServiceNames.has(serviceGroup.ServiceName))
         .map((serviceGroup) => {
-          const subServices = serviceGroup.SubServices.map((sub) => {
-            const details = sub.Details.map((detailItem) => {
-              const detailName = detailItem?.DetailsName || "";
+          // For each sub in serviceGroup.SubServices, collect price(s) from AddServiceFormData
+          const subServices = (serviceGroup.SubServices || []).map((sub) => {
+            const details = (sub.Details || []).map((detailItem) => {
+              const detailName = detailItem?.DetailsName || detailItem?.Detail || detailItem?.DetailName || '';
               const detailKey = `price_${sub.Service}_${detailName}`;
               const price = AddServiceFormData[detailKey];
               return { Detail: detailName, Charge: price ? Number(price) : 0 };
             });
+
+            // If sub has no Details but might have a default key (default flow), try default key
+            if ((details.length === 0) && (AddServiceFormData[`price_${sub.Service}_default`] !== undefined)) {
+              const price = AddServiceFormData[`price_${sub.Service}_default`];
+              return { Service: sub.Service, Details: [{ Detail: 'default', Charge: price ? Number(price) : 0 }] };
+            }
+
             return { Service: sub.Service, Details: details };
           });
 
+          // If a serviceGroup had a flat Charge saved previously, you may want to transfer it to SubServices structure.
+          // We'll return the structure with SubServices (server can interpret).
           return { ServiceName: serviceGroup.ServiceName, SubServices: subServices };
         })
     };
@@ -72,23 +137,22 @@ function ServiceForm() {
       return;
     }
 
-    console.log('Final structured form data:', FinalServiceFormData);
-    const delay = new Promise(resolve => setTimeout(resolve, 5000));
-    const apiCall = fetch(`${URL}/worker/service`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ FinalServiceFormData, UserObjectID: UserData.UserObjectID, WorkerObjectID: WorkerFormData.WorkerObjectID })
-    });
-
+    // API call - same as before. Backend should accept this for create/update.
     try {
-      const [serviceResponse] = await Promise.all([apiCall, delay]);
-      if (serviceResponse.ok) {
-        toastSuccess("Service details created successfully");
-        setServiceFormData({ isService: true });
+      const res = await fetch(`${URL}/worker/service`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ FinalServiceFormData, UserObjectID: UserData.UserObjectID, WorkerObjectID: WorkerFormData.WorkerObjectID })
+      });
+
+      if (res.ok) {
+        toastSuccess("Service details saved successfully");
+        // refresh context flag so UI reflects new services
+        setServiceFormData({ isService: true, Services: FinalServiceFormData.Services });
         toggleServiceForm(false);
       } else {
-        const data = await serviceResponse.json().catch(() => ({}));
+        const data = await res.json().catch(()=>({}));
         toastFailure(data?.message || 'Something went wrong');
       }
     } catch (error) {
@@ -147,20 +211,26 @@ function ServiceForm() {
                   {sub.Service}
                 </h4>
 
-                {sub.Details.map((detail, detailIdx) => (
-                  <div key={detailIdx} className="mb-2 sm:mx-4 w-full sm:w-auto">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {detail.DetailsName}
-                    </label>
-                    <input
-                      type="number"
-                      name={`price_${sub.Service}_${detail.DetailsName}`}
-                      placeholder="Enter Price"
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      onChange={handleAddServiceFormInputChange}
-                    />
-                  </div>
-                ))}
+                {sub.Details.map((detail, detailIdx) => {
+                  const detailLabel = detail.DetailsName || detail.Detail || detail.name || `Option ${detailIdx+1}`;
+                  const inputName = `price_${sub.Service}_${detailLabel}`;
+
+                  return (
+                    <div key={detailIdx} className="mb-2 sm:mx-4 w-full sm:w-auto">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {detailLabel}
+                      </label>
+                      <input
+                        type="number"
+                        name={inputName}
+                        placeholder="Enter Price"
+                        value={AddServiceFormData[inputName] ?? ''}
+                        className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        onChange={handleAddServiceFormInputChange}
+                      />
+                    </div>
+                  )
+                })}
               </div>
             ))}
           </div>

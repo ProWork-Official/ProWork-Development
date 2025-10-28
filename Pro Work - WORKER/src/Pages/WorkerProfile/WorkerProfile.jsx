@@ -33,7 +33,7 @@ function WorkerProfile() {
 
       {EditWorkerDetails && <WorkerFormEdit /> }
 
-      {!ServiceFormData.isService && <ServiceForm />} 
+      <ServiceForm />
 
 
       <div className="w-full px-4 flex flex-wrap justify-between items-center mb-6">
@@ -162,9 +162,21 @@ function WorkerProfile() {
               {ServiceFormData?.isService && Array.isArray(ServiceFormData?.Services) && (
   <div className="col-span-2 sm:col-span-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-8">
 
-    <div className="col-span-2 mb-4 sm:col-span-6 lg:col-span-8">
-      <div className='col-span-2 sm:col-span-6 mt-8 text-2xl text-gray-900'>Service Name & Charges</div>
+    <div className="col-span-2 mb-4 sm:col-span-6 lg:col-span-8 flex items-center justify-between">
+     <div className='col-span-2 sm:col-span-6 mt-8 text-2xl text-gray-900'>Service Name & Charges</div>
+
+     {/* Edit Services button: yellow background + green text */}
+     <div className="mt-6 sm:mt-8">
+      <button
+        type="button"
+        onClick={() => toggleServiceForm(true)}
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-[#f2da1d] text-[#33806b] font-semibold shadow-md hover:brightness-95"
+      >
+        Edit Services
+      </button>
     </div>
+  </div>
+
 
     {ServiceFormData.Services.map((serviceGroup, groupIdx) => (
       <div key={groupIdx} className="col-span-2 sm:col-span-6 lg:col-span-8">
