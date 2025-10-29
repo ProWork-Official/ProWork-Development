@@ -101,3 +101,38 @@ export async function contactUsage(req, res) {
     return res.status(500).send({ message: 'Error fetching contact usage', error: err.message || err });
   }
 }
+
+export async function contactUnreadCount(req, res) {
+  try {
+    // require auth (reuse your verify helper)
+    const currUserID = verifyTokenAndGetUser(req);
+
+    // count unread messages
+    const count = await Contact.countDocuments({ read: false });
+    return res.status(200).send({ unreadCount: count });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).send({ message: err.message });
+    console.error('Error fetching unread count:', err);
+    return res.status(500).send({ message: 'Error fetching unread count', error: err.message || err });
+  }
+}
+
+export async function contactMarkRead(req, res) {
+  try {
+    // require auth
+    const currUserID = verifyTokenAndGetUser(req);
+
+    const { id } = req.params;
+    if (!id) return res.status(400).send({ message: 'Message id required' });
+
+    const updated = await Contact.findByIdAndUpdate(id, { read: true }, { new: true });
+    if (!updated) return res.status(404).send({ message: 'Message not found' });
+
+    return res.status(200).send(updated);
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).send({ message: err.message });
+    console.error('Error marking contact read:', err);
+    return res.status(500).send({ message: 'Error marking contact read', error: err.message || err });
+  }
+}
+

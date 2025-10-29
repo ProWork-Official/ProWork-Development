@@ -1,10 +1,16 @@
 import nodemailer from 'nodemailer';
 import JWT from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
 
 // Importing required modules from local files
 import User from '../models/User/User.js'
 import Worker from '../models/Worker/Worker.js'
 import WorkerService from '../models/Worker/WorkerService.js';
+import WorkerBank from '../models/Worker/WorkerBank.js';
+import WorkerWidthdrawal from '../models/Worker/WorkerWidthrawal.js';
+import WorkerMoney from '../models/Worker/WorkerMoney.js';
+import WorkerReview from '../models/Worker/WorkerReview.js';
 import UserPersonal from '../models/User/UserPersonal.js'
 import UserAddress from '../models/User/UserAddress.js'
 import UserBooking from '../models/User/UserBooking.js'
@@ -179,5 +185,121 @@ export async function ServicePostUpdate(req, res) {
   } catch (error) {
     console.error("Error in adding services, try again", error);
     return res.status(500).send({ message: "Error in adding service", error });
+  }
+}
+
+// permanently delete a worker and related documents
+export async function adminDeleteWorker(req, res) {
+  try {
+    const { id } = req.params;
+    
+    // - if (!require('mongoose').Types.ObjectId.isValid(id)) {
+    // + Use the imported mongoose object here too for consistency
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ message: 'Invalid worker id' });
+    }
+
+    // Delete main worker doc
+    await Worker.findByIdAndDelete(id);
+
+    // ... (rest of the function is fine)
+
+    console.log(`Admin: Deleted worker ${id} and related docs`);
+    return res.status(200).send({ message: 'Worker and related data deleted' });
+  } catch (err) {
+    console.error('adminDeleteWorker error', err);
+    return res.status(500).send({ message: 'Server error', error: err.message });
+  }
+}
+
+
+
+
+export async function adminGetWorkerById(req, res) {
+  try {
+    const { id } = req.params;
+    console.log('>>> adminGetWorkerById called, id=', id, 'headers=', req.headers);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('adminGetWorkerById: invalid id', id);
+      return res.status(400).send({ message: 'Invalid worker id' });
+    }
+
+    const worker = await Worker.findById(id);
+    console.log('adminGetWorkerById: found worker =', !!worker);
+
+    if (!worker) return res.status(404).send({ message: 'Worker not found' });
+    return res.status(200).send(worker);
+  } catch (err) {
+    console.error('adminGetWorkerById ERROR stack:', err.stack || err);
+    return res.status(500).send({ message: 'Server error', error: err.message });
+  }
+}
+
+export async function adminGetWorkerServices(req, res) {
+  try {
+    const { id } = req.params;
+    console.log('>>> adminGetWorkerServices called, id=', id, 'headers=', req.headers);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('adminGetWorkerServices: invalid id', id);
+      return res.status(400).send({ message: 'Invalid worker id' });
+    }
+
+    const services = await WorkerService.find({ WorkerObjectID: id });
+    console.log('adminGetWorkerServices: services length =', services?.length ?? 0);
+
+    if (!services || services.length === 0) return res.status(204).send();
+    return res.status(200).send(services);
+  } catch (err) {
+    console.error('adminGetWorkerServices ERROR stack:', err.stack || err);
+    return res.status(500).send({ message: 'Server error', error: err.message });
+  }
+}
+
+
+
+
+
+
+
+// adminUpdateWorker: allow admin to update worker fields and optionally AadharFront/AadharBack images
+export async function adminUpdateWorker(req, res) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ message: 'Invalid worker id' });
+    }
+
+    // build update object from body fields
+    const update = {};
+    const allowedFields = ['ShopName', 'ShopDescription', 'ShopAddress', 'ShopCategory', 'Area', 'City', 'FullName', 'ShopEmail', 'ShopPhoneNumber'];
+    allowedFields.forEach(f => {
+      if (req.body[f] !== undefined) update[f] = req.body[f];
+    });
+
+    // If files present, upload to cloudinary and set the URLs
+    // Reuse your cloudinary uploader function used in Worker.js: uploadFileToCloudinary
+    // If you don't have it accessible here, import/duplicate small wrapper. Assuming you have cloudinary configured elsewhere:
+    if (req.files) {
+      const uploads = [];
+      if (req.files.AadharFront) uploads.push({ key: 'AadharFront', file: req.files.AadharFront });
+      if (req.files.AadharBack) uploads.push({ key: 'AadharBack', file: req.files.AadharBack });
+      // Note: the caller is admin, shop profile images not editable per requirement
+      for (const u of uploads) {
+        // each u.file might be array or single
+        const fileObj = Array.isArray(u.file) ? u.file[0] : u.file;
+        if (!fileObj || !fileObj.mimetype) continue;
+        // Use cloudinary uploader directly:
+        // you have cloudinary config in Worker.js; consider extracting uploadFileToCloudinary to a shared util.
+        const uploaded = await cloudinary.uploader.upload(fileObj.tempFilePath, { folder: `ProWork/AdminUpdates/${u.key}` });
+        update[u.key] = uploaded.secure_url;
+      }
+    }
+
+    const updated = await Worker.findByIdAndUpdate(id, update, { new: true });
+    if (!updated) return res.status(404).send({ message: 'Worker not found' });
+    return res.status(200).send(updated);
+  } catch (err) {
+    console.error('adminUpdateWorker error', err);
+    return res.status(500).send({ message: 'Server error', error: err.message });
   }
 }
