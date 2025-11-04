@@ -17,7 +17,7 @@ import OTPForm from './Components/SignUpForm/OTPForm'
 
 // Pages
 import Profile from './Pages/Profile/Profile'
-import EditProfilePage from './Pages/Profile/EditProfile';
+import MyProfile from './Pages/Profile/MyProfile';
 import WorkerProfile from './Pages/WorkerProfile/WorkerProfile'
 import WorkerRegister from './Pages/WorkerRegister/WorkerRegister';
 import Error404 from './Pages/Error404/Error404'
@@ -60,17 +60,22 @@ function App() {
           <Route path='/terms-of-service' element={<Terms/>}/>
           <Route path='/privacy-policy' element={<PrivacyPolicy/>}/>
           <Route path='/feedback' element={<Feedback/>}/>
-          <Route path='/change-location' element={<ChangeLocation/>} />
+          
+          {/* <Route path='/change-location' element={<ChangeLocation/>} /> */}
 
           <Route element={<ProtectedRoutes/>}>
             <Route path='/payment_success?' element={<Success/>}/>
             <Route path='/payment_failed?' element={<Failed/>}/>
-            <Route path='/my-profile/:id' element={<Profile/>}/>
-            <Route path="/my-profile/edit-profile" element={<EditProfilePage/>} /> 
+            <Route path='/account' element={<Profile />} />
+            <Route path='/account/my-profile' element={<MyProfile/>}/>
             <Route path='/my-profile/:id/my-worker-profile/:id' element={<WorkerProfile/>}/>
             <Route path='/my-profile/:id/my-work/:id' element={<MyWork/>}/>
             <Route path='/my-profile/:id/my-worker-profile/:id/my-wallet' element={<Wallet/>}/>
           </Route>
+
+          {/* Catch-all 404 page */}
+          <Route path='*' element={<Error404/>} />
+          
         </Routes>
       </div>
       <Footer />

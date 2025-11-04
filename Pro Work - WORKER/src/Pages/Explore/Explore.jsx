@@ -93,7 +93,7 @@ function Explore() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className={`rounded-xl shadow-lg p-8 w-full max-w-3xl h-[85vh] relative flex flex-col ${getModalColorClasses()}`}>
            <button
-            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
+            className="absolute top-2 right-2 text-white-500 hover:text-white-700 text-xl"
             onClick={() => setModalContent(null)}
           >
           &times;
@@ -157,7 +157,7 @@ function Explore() {
                 ${idx % 2 === 0 ? 'bg-[#f2da1d] border-[#33806b]' : 'bg-[#33806b] border-[#f2da1d]'}
               `}
             >
-              <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-6 md:mb-8 ${idx % 2 === 0 ? 'text-[#1f2937]' : 'text-white'}`}>
+              <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-6 md:mb-8 ${idx % 2 === 0 ? 'text-white' : 'text-white'}`}>
                 {event.eventName}
               </h2>
               <p className={`text-base md:text-lg lg:text-xl leading-relaxed mb-4 line-clamp-4 max-h-28 overflow-hidden flex-1 ${idx % 2 === 0 ? 'text-[#1f2937]' : 'text-white'}`}>
@@ -170,7 +170,7 @@ function Explore() {
                 Read more
               </button>
               <div className="mt-2 text-sm">
-                <span className={idx % 2 === 0 ? "text-[#1f2937]" : "text-white"}>
+                <span className={idx % 2 === 0 ? "text-white" : "text-white"}>
                   {event.eventDate}
                 </span>
               </div>

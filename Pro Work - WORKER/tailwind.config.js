@@ -11,6 +11,7 @@ export default {
         'xxs': '490px',
         'xxxs': '430px',
         'ssm': '640px',
+        'mmd': '850px',
       },
       backgroundImage:{
         'SignUpBtnBG': 'linear-gradient(10deg, #5f5e5f 1%,  #111111 99%)',

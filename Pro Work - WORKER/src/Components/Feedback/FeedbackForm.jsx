@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import {useState} from 'react'
 
 function FeedbackForm({ onClose, onAddFeedback }) {
   const [name, setName] = useState('')
@@ -9,16 +9,10 @@ function FeedbackForm({ onClose, onAddFeedback }) {
   
   const handleSubmit = (e) => {
     e.preventDefault()
-    onAddFeedback({
-      name,
-      role,
-      feedback,
-      image,
-      userType,
-    })
-   }
+    onAddFeedback({ name, role, feedback, image, userType,})
+  }
    
-    return (
+  return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <h2 className="text-2xl font-bold mb-2 text-[#33806b]">Add Feedback</h2>
       <label className="font-semibold">

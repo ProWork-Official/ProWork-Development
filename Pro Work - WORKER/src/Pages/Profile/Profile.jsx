@@ -7,21 +7,18 @@ import axios from 'axios'
 // Utils
 import UserInfo from '../../Utils/UserInfo.jsx'
 
+// Assets
 import ProworkLogo from '../../Assets/ProworkLogo.png';
 
 // Components
 import ProfileBlock from '../../Components/ProfileBlock/ProfileBlock'
-// import PersonalForm from '../../Components/UserForm/PersonalForm'
-// import PersonalLabel from '../../Components/UserForm/PersonalLabel'
-// import PersonalFormEdit from '../../Components/UserForm/PersonalFormEdit'
 
 // Functions
 import { URL, toastFailure } from '../../func.jsx'
-// import { togglePersonalForm, togglePersonalLabel} from '../../Components/UserForm/funcUserForm'
 import { MyContext } from '../../ContextAPI'
 
 function Profile() {
-  const { setSendOTP,setPhoneNumber, UserData, PersonalFormData, WorkerFormData, EditPersonalDetails, removeSessionID } = useContext(MyContext);
+  const { setSendOTP,setPhoneNumber, UserData, PersonalFormData, WorkerFormData, removeSessionID } = useContext(MyContext);
 
   // Logging out user
   async function LogOut(){
@@ -60,80 +57,70 @@ function Profile() {
   }
 
   return (
-    <div className='flex flex-col w-screen '>
-      <Helmet><title>Pro Work - My Profile</title></Helmet>
+    <div  className='flex flex-wrap w-screen'>
+      <Helmet><title>Pro Work - Account</title></Helmet>
 
-      {/* {PersonalFormData.isPersonal ?
-        <div>{EditPersonalDetails ? <PersonalFormEdit /> : <PersonalLabel/> }</div>
-        :  
-        <PersonalForm/> 
-      } */}
+      {/* Profile navbar */}
+      <div className='flex justify-center bg-[#f2da1d] h-20 w-full z-50 transition-all duration-300 '>
+        <div className="flex justify-between items-center h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
+          <Link to='/'> <img src={ProworkLogo} alt="" className='h-[4.5rem]' /> </Link>
+          <button className='bg-[#33806b] text-[#f2da1d] hover:bg-[#317462] h-10 px-6 rounded-md' onClick={LogOut}>Log Out</button>
+        </div>
+      </div>
 
-      
-      <div className='w-full h-4/6 bg-white z-[45] flex flex-wrap justify-between' >
-
-        <div className='flex justify-center bg-[#f2da1d] h-20 w-full z-50 transition-all duration-300'>
-          <div className="flex justify-between items-center h-full w-full max-w-[1250px] mx-auto px-4 xl:px-0">
-            <Link to='/'> <img src={ProworkLogo} alt="" className='h-[4.5rem]' /> </Link>
-            <button className='bg-[#33806b] text-[#f2da1d] hover:bg-[#317462] h-10 px-6 rounded-md' onClick={LogOut}>Log Out</button>
+      {/* Left Part */}
+      <div className='w-full mmd:w-[50%] lg:w-[40%] z-50 bg-white'>
+       
+        <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]'>
+          <div className='flex justify-center items-center h-[120px] w-[120px] sm:h-40 sm:w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
+            <h1 className='text-[#33806b] text-4xl sm:text-6xl'>{PersonalFormData.Name ? PersonalFormData.Name[0].toUpperCase() : 'P'}</h1>
           </div>
         </div>
 
-        <div className='h-1/2 w-full bg-white '> 
-
-          <div className='pt-4 px-4 h-12 bg-[#f2da1d]'>
-            <div className='flex justify-center items-center h-40 w-40 rounded-full bg-white border-4 border-[#f2da1d]'>
-              <h1 className='text-[#33806b] text-6xl'>P</h1>
-            </div>
-          </div>
-
-          <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
-            <div className='w-1/2 sm:w-[55%] h-24 py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
-              <h2 className='text-sm sm:text-xl w-full text-start '>
-                {PersonalFormData?.Name || PersonalFormData?.name || 'Complete Your Profile'}
-              </h2>
-
-              <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>
-                {PersonalFormData?.Email || PersonalFormData?.email || ''}
-              </p>
-
-              <Link to="/my-profile/edit-profile">
-                <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>
-                  {PersonalFormData?.isPersonal ? 'Edit Profile' : 'Add Profile'}
-               </button>
-              </Link>
-            </div>
+        <div className='w-full max-w-[350px] sm:max-w-[450px] flex justify-end items-start'>
+          <div className='w-1/2 sm:w-[55%] h-24  py-1 sm:h-36 flex flex-col flex-wrap justify-start'>
+            <h2 className='text-sm sm:text-xl w-full text-start '>{PersonalFormData ? PersonalFormData.Name : 'Complete Your Profile'}</h2>
+            {true && <p className='text-gray-600 text-[10px] sm:text-sm pt-1 pb-4'>{PersonalFormData ? PersonalFormData.Email : ''}</p> }
+            {PersonalFormData ?
+            <Link to='/account/my-profile'>
+              <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Edit Profile</button>
+            </Link>
+            :
+            <Link to='/account/my-profile'>
+              <button className='bg-[#33806b] text-white text-xs hover:bg-[#317462] h-8 px-4 sm:px-6 rounded-lg sm:-mt-12 '>Add Profile</button>
+            </Link>
+            }
           </div>
         </div>
+
         
-      
-
         <div className='flex flex-wrap pb-8 justify-center xs:justify-start pt-4 w-full max-w-[450px]'>
-          <a className="w-full" href="http://localhost:4000" target="_blank" rel="noopener noreferrer">
-            <ProfileBlock heading1="Login as User" />
-          </a>
-
           {WorkerFormData?.isWorker ? (
             <Link className='w-full' to={`/my-profile/${WorkerFormData.UserObjectID}/my-worker-profile/${WorkerFormData.WorkerObjectID}`}>
-              <ProfileBlock heading1='Worker Details' heading2='Edit Now' />
+              <ProfileBlock heading1='Worker Details' />
             </Link>
           ) : null}
 
           {WorkerFormData?.isWorker ? (
             <Link className='w-full' to={`/my-profile/${WorkerFormData.UserObjectID}/my-work/${WorkerFormData.WorkerObjectID}`}>
-              <ProfileBlock heading1='My Work' heading2='View History' />
+              <ProfileBlock heading1='My Work' />
             </Link>
           ) : null}
 
-          <Link className='w-full' to={`/my-profile/${WorkerFormData.UserObjectID}/my-work/${WorkerFormData.WorkerObjectID}`}>
+          <a className="w-full" href="http://localhost:4000" target="_blank" rel="noopener noreferrer">
+            <ProfileBlock heading1="Login as User" />
+          </a>
+
+          <Link className='w-full' to={`/contact-us`}>
             <ProfileBlock heading1='Customer Support' />
           </Link> 
         </div>
+      </div>
 
-        {/* Right Part */}
-      <div className="hidden md:flex flex-wrap md:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
+      {/* Right Part */}
+      <div className="hidden mmd:flex flex-wrap mmd:w-[50%] lg:w-[60%] pb-[70px] z-50 bg-white">
 
-        {/* <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]' /> */}
+        <div className='w-full pt-4 px-4 h-12 bg-[#f2da1d]' />
         
         <div className='w-full h-full px-8 py-4'>
           <div className='w-full h-full border border-[#33806b] rounded-lg relative '>
@@ -147,7 +134,7 @@ function Profile() {
               {/* Content */}
               <div className='pt-16 px-4 pb-4 flex flex-col justify-center'>
 
-
+               
                 <div className="flex w-full flex-wrap justify-center">
                   <div className="flex w-full justify-center">
                     <fieldset className="h-16 w-[95%] pl-4 border-2 border-[#33806b] rounded-xl mb-8">
@@ -173,10 +160,14 @@ function Profile() {
         </div>
       </div>
     </div>
-
-      
-    </div>
   )
 }
 
 export default Profile
+
+
+
+
+
+
+

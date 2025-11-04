@@ -28,7 +28,11 @@ function Footer() {
           <div>
             <h3 className='text-xl text-[#33806b] font-semibold mb-4'>Customers</h3>
             <ul className='space-y-2 text-sm'>
-              <li><Link to='/services' onClick={scrollTop0} className='hover:text-green-600'>Services Near You</Link></li>
+              <li>
+                <a href="http://localhost:4000/services" target="_blank" rel="noopener noreferrer" onClick={scrollTop0} className='hover:text-green-600'>
+                  Services Near You
+                </a>
+              </li>
               <li><Link to='/feedback' onClick={scrollTop0} className='hover:text-green-600'>Feedback</Link></li>
               <li><Link to='/contact-us' onClick={scrollTop0} className='hover:text-green-600'>Contact Us</Link></li>
             </ul>
@@ -46,7 +50,7 @@ function Footer() {
           <div className='flex flex-wrap'>
             <h3 className='text-xl w-full text-[#33806b] font-semibold mb-4'>Follow Us</h3>
             <div className='flex xxs:space-x-4 flex-wrap xxs:flex-nowrap'>
-              <a href="https://www.instagram.com/prowork24x7/" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.instagram.com/proworkofficial/" target="_blank" rel="noopener noreferrer">
                 <img className='h-10 hover:scale-110 transition-transform' src={insta48} alt="Instagram" />
               </a>
               <a href="https://www.linkedin.com/company/pro-work-in/?viewAsMember=true" target="_blank" rel="noopener noreferrer">

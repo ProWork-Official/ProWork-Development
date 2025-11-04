@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { MyContext } from "../ContextAPI";
 import { loadScript } from "./LocationGate";
 import { URL } from "../func";
@@ -8,18 +9,22 @@ import NextY from "../Assets/next_Y.png";
 import searcH from "../Assets/search.png";
 import { useDebounce } from "../Components/Hooks/useDebounce";
 import locationIcon from "../Assets/gps.png";
-import Plus from "../Assets/gps.png";
-import Home from '../Assets/gps.png';
-import Office from '../Assets/gps.png'
-import Other from '../Assets/gps.png'
-import CustomMarkerImg from "../Assets/gps.png";
-import Pin from "../Assets/gps.png";
+import Plus from "../Assets/plus.png";
+import Home from '../Assets/home.png';
+import Office from '../Assets/office.png'
+import Other from '../Assets/other.png'
+import Pin from "../Assets/Pin.png";
 import axios from "axios";
 
 function UpdateLocation() {
-  const { showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, statusMsg, setStatusMsg } = useContext(MyContext);
+  const { SessionID, showMap, setShowMap, addss, setAdss, pickerStep, setPickerStep, status, setStatus, statusMsg, setStatusMsg } = useContext(MyContext);
+
   const mapRef = useRef(null);
   const markerRef = useRef(null);
+  const pendingCenterRef = useRef(null); // NEW: keep coords to pan after map init
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [loadingMap, setLoadingMap] = useState(false);
   const [tempAdds, setTempAddss] = useState("");
   const [selected, setSelected] = useState(null);
@@ -35,22 +40,16 @@ function UpdateLocation() {
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [savedAddress, setSavedAddress] = useState([]);
-
-  const [addressForm, setAddressForm] = useState({
-    type: "Home",
-    building: "",
-    landmark: "",
-    pinCode: "",
-    completeAddress: "",
-  });
+  const [addressForm, setAddressForm] = useState({ type: "Home", building: "", landmark: "", pinCode: "", completeAddress: "" });
 
   const defaultCenter = { lat: 25.4358, lng: 81.8463 };
 
   // Fetch addresses from backend on mount
   useEffect(() => {
+    if(! SessionID.SessionID) return;
+
     async function fetchAddresses() {
       try {
-        // GET /user/address/:addressId (addressId = "all" for all addresses)
         const res = await axios.get(`${URL}/user/address/all`, { withCredentials: true });
         setSavedAddress(res.data);
       } catch (e) {
@@ -71,28 +70,30 @@ function UpdateLocation() {
     const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
 
     loadScript(src)
-      .then(() => {
-        if (!window.google || !window.google.maps || !window.google.maps.places) {
-          setStatusMsg("Google Places library not available.");
-          return;
-        }
-        if (autocompleteInputRef.current) autocompleteInputRef.current.focus();
-        if (debouncedSearchQuery) {
-          const autocompleteService = new window.google.maps.places.AutocompleteService();
-          autocompleteService.getPlacePredictions(
-            { input: debouncedSearchQuery, componentRestrictions: { country: "in" } },
-            (newPredictions, status) => {
-              if (status === "OK" && newPredictions) setPredictions(newPredictions);
-              else setPredictions([]);
-            }
-          );
-        } else {
-          setPredictions([]);
-        }
-      })
-      .catch((err) => {
-        setStatusMsg("Failed to load Google Maps Places.");
-      });
+    .then(() => {
+      if (!window.google || !window.google.maps || !window.google.maps.places) {
+        setStatusMsg("Google Places library not available.");
+        return;
+      }
+
+      if (autocompleteInputRef.current) autocompleteInputRef.current.focus();
+
+      if (debouncedSearchQuery) {
+        const autocompleteService = new window.google.maps.places.AutocompleteService();
+        autocompleteService.getPlacePredictions(
+          { input: debouncedSearchQuery, componentRestrictions: { country: "in" } },
+          (newPredictions, status) => {
+            if (status === "OK" && newPredictions) setPredictions(newPredictions);
+            else setPredictions([]);
+          }
+        );
+      } else {
+        setPredictions([]);
+      }
+    })
+    .catch((err) => {
+      setStatusMsg("Failed to load Google Maps Places.");
+    });
   }, [showMap, pickerStep, debouncedSearchQuery, isAddingNewAddress]);
 
   // Map initialization / updates
@@ -110,12 +111,14 @@ function UpdateLocation() {
       .then(() => {
         setLoadingMap(false);
         if (!mapInstanceRef.current) {
-          const center = selected ? { lat: selected.lat, lng: selected.lng } : defaultCenter;
-          checkAndSaveCoords(center, { autoOpenMapIfOutside: true }).catch(() => {});
+          // center preference:
+          const center = selected ? { lat: selected.lat, lng: selected.lng } : (pendingCenterRef.current || defaultCenter);
+          // do NOT rely on checkAndSaveCoords to block centering — validate in background
+          // validation-only — do not alter global status while centering on a searched location
+          checkAndSaveCoords(center, { autoOpenMapIfOutside: false, silent: true }).catch(()=>{});
           const map = new window.google.maps.Map(mapRef.current, { center, zoom: 15 });
           mapInstanceRef.current = map;
           const markerIcon = {
-            url: CustomMarkerImg,
             url: Pin,
             scaledSize: new window.google.maps.Size(40, 40),
             origin: new window.google.maps.Point(0, 0),
@@ -123,17 +126,31 @@ function UpdateLocation() {
           };
           const marker = new window.google.maps.Marker({ position: center, map, draggable: true, title: "Drag to set your location", icon: markerIcon });
           markerRef.current = marker;
+          // If there is a pending center requested (from search), pan the map to it now
+          if (pendingCenterRef.current) {
+            try {
+              const c = pendingCenterRef.current;
+              const pos = new window.google.maps.LatLng(c.lat, c.lng);
+              markerRef.current.setPosition(pos);
+              map.panTo(pos);
+              map.setZoom(15);
+            } catch (e) {}
+            pendingCenterRef.current = null;
+          }
           listenerClick = map.addListener("click", (e) => {
             const p = { lat: e.latLng.lat(), lng: e.latLng.lng() };
             if (markerRef.current && markerRef.current.setPosition) markerRef.current.setPosition(e.latLng);
             setSelected(p);
-            checkAndSaveCoords(p, { autoOpenMapIfOutside: true }).catch(() => {});
+            // validation-only — do not alter global status while centering on a searched location
+            checkAndSaveCoords(p, { autoOpenMapIfOutside: false, silent: true }).catch(()=>{});
           });
           marker.addListener("dragend", (ev) => {
             const p = ev.latLng ? { lat: ev.latLng.lat(), lng: ev.latLng.lng() } : null;
             if (p) {
               setSelected(p);
-              checkAndSaveCoords(p, { autoOpenMapIfOutside: true }).catch(() => {});
+              // validation-only — do not alter global status while centering on a searched location
+              checkAndSaveCoords(p, { autoOpenMapIfOutside: false, silent: true }).catch(()=>{});
+
             }
           });
           requestAnimationFrame(() =>
@@ -215,45 +232,96 @@ function UpdateLocation() {
         if (status === "OK" && place && place.geometry && place.geometry.location) {
           const lat = place.geometry.location.lat();
           const lng = place.geometry.location.lng();
-          setSelected({ lat, lng });
+
+          const coords = { lat, lng };
+          // Set temporary address & selected state
+          setSelected(coords);
           setTempAddss(place.formatted_address || place.name);
           setStatusMsg("");
-          requestAnimationFrame(() => setTimeout(() => { setPickerStep("map"); setShowMap(true); }, 40));
-        } else setStatusMsg("Could not retrieve location details. Please try again.");
+
+          // Save coords to pendingCenterRef so map init or existing map will pan to it
+          pendingCenterRef.current = coords;
+
+          // Validate in background but do not block UI/centering
+          // new (silent validation — do not block centering)
+          checkAndSaveCoords(coords, { autoOpenMapIfOutside: false, silent: true }).catch(() => {});
+
+          // Open map UI and ensure we pan to coords (map init will also handle pendingCenterRef)
+          requestAnimationFrame(() =>
+            setTimeout(() => {
+              setPickerStep("map");
+              setShowMap(true);
+              // attempt immediate pan if map already exists
+              try {
+                if (mapInstanceRef.current) {
+                  const pos = new window.google.maps.LatLng(coords.lat, coords.lng);
+                  if (markerRef.current && markerRef.current.setPosition) markerRef.current.setPosition(pos);
+                  mapInstanceRef.current.panTo(pos);
+                  mapInstanceRef.current.setZoom(15);
+                  pendingCenterRef.current = null;
+                }
+              } catch (err) {}
+            }, 40)
+          );
+        } else {
+          setStatusMsg("Could not retrieve location details. Please try again.");
+        }
       }
     );
   };
 
-  // quick flow: validate+save current location (local only, not backend)
-  const useMyCurrentLocation = async () => {
-    setStatusMsg("Detecting your current location...");
-    if (!navigator.geolocation) {
-      setStatusMsg("Geolocation not available in this browser.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        try {
-          const tempAddress = await checkAndSaveCoords(coords, { autoOpenMapIfOutside: true });
+const useMyCurrentLocation = async () => {
+  setStatusMsg("Detecting your current location...");
+  if (!navigator.geolocation) {
+    setStatusMsg("Geolocation not available in this browser.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      try {
+        // result is now an object: { allowed, finalAddress }
+        const result = await checkAndSaveCoords(coords, { autoOpenMapIfOutside: true });
+
+        // NEW: persist coords so they survive refresh
+        if (result && result.allowed) {
+          try {
+            localStorage.setItem("selected_coords", `${coords.lat},${coords.lng}`);
+          } catch (e) { /* ignore storage errors */ }
+        }
+
+        // NEW: If allowed -> save the address string and close the map
+        if (result.allowed) {
           setTimeout(() => {
-            setAdss(tempAddress);
+            setAdss(result.finalAddress); // use geocoded address string
             setShowMap(false);
             setPickerStep("search");
             setStatusMsg("");
+            navigate("/");
           }, 350);
-        } catch (err) {
+        } else {
+          // If not allowed, set the address text but KEEP the map open
+          setSelected(coords);
+          setTempAddss(result.finalAddress);
           setPickerStep("map");
           setShowMap(true);
+          navigate("/change-location");
         }
-      },
-      (err) => {
-        setStatusMsg("Unable to detect your location. You can pick manually.");
+      } catch (err) {
+        // geocoder or other error -> show map and let user pick
         setPickerStep("map");
-      },
-      { timeout: 8000 }
-    );
-  };
+        setShowMap(true);
+        setStatusMsg("Could not validate location, please adjust on map.");
+      }
+    },
+    (err) => {
+      setStatusMsg("Unable to detect your location. You can pick manually.");
+      setPickerStep("map");
+    },
+    { timeout: 8000 }
+  );
+};
+
 
   // NEW: start Add New Address flow => center map on current location and keep isAddingNewAddress
   const startAddNewAddress = () => {
@@ -272,7 +340,13 @@ function UpdateLocation() {
         setSelected(coords);
         setPickerStep("map");
         setShowMap(true);
-        checkAndSaveCoords(coords, { autoOpenMapIfOutside: true }).then((addr) => setTempAddss(addr)).catch(() => {});
+        // This is the fixed part
+       // new — validation-only so map can still center on the searched coordinates
+       checkAndSaveCoords(coords, { autoOpenMapIfOutside: true })
+       .then((result) => setTempAddss(result.finalAddress))
+       .catch(() => {});
+
+
       },
       (err) => {
         setStatusMsg("Unable to detect current location; please pick on map.");
@@ -283,90 +357,176 @@ function UpdateLocation() {
     );
   };
 
-  // reverse geocode + validate
-  const checkAndSaveCoords = async (coords, opts = { autoOpenMapIfOutside: true }) => {
-    setStatusMsg("Checking selected location...");
-    try {
-      const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
-      await loadScript(src);
-      if (!window.google || !window.google.maps || typeof window.google.maps.Geocoder !== "function")
-        throw new Error("Google Maps library not available after loading.");
-      const geocoder = new window.google.maps.Geocoder();
-      return new Promise((resolve, reject) => {
-        geocoder.geocode({ location: coords }, (results, geocodeStatus) => {
-          if (geocodeStatus !== "OK" || !results || results.length === 0) {
+// reverse geocode + validate
+const checkAndSaveCoords = async (coords, opts = { autoOpenMapIfOutside: true, silent: false }) => {
+  // opts:
+  //  - autoOpenMapIfOutside: whether callers want the function to trigger the "outside" UI/flow
+  //  - silent: if true, DON'T set global status/statusMsg/pickerStep etc.
+  if (!coords) return { allowed: false, finalAddress: '' };
+  if (!opts || typeof opts !== 'object') opts = { autoOpenMapIfOutside: true, silent: false };
+
+  if (!opts.silent) setStatusMsg("Checking selected location...");
+  try {
+    const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+    await loadScript(src);
+
+    if (!window.google || !window.google.maps || typeof window.google.maps.Geocoder !== "function") {
+      if (!opts.silent) {
+        setStatus("error");
+        setStatusMsg("Google Maps library not available after loading.");
+      }
+      return { allowed: false, finalAddress: `${coords.lat?.toFixed?.(4) || ""}, ${coords.lng?.toFixed?.(4) || ""}` };
+    }
+
+    const geocoder = new window.google.maps.Geocoder();
+
+    return await new Promise((resolve) => {
+      geocoder.geocode({ location: coords }, (results, geocodeStatus) => {
+        if (geocodeStatus !== "OK" || !results || results.length === 0) {
+          if (!opts.silent) {
+            setStatus("error");
             setStatusMsg("Reverse geocoding failed. Try a different point.");
-            reject("Reverse geocoding failed.");
-            return;
           }
-          let bestResult = null;
-          for (const result of results) {
-            const formattedAddress = result.formatted_address || "";
-            if (formattedAddress.match(/^\w{4}\+\w{4}$/)) continue;
-            if (!bestResult || (formattedAddress && formattedAddress.length > (bestResult.formatted_address || "")))
-              bestResult = result;
-          }
-          if (!bestResult) {
+          resolve({ allowed: false, finalAddress: `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
+          return;
+        }
+
+        // pick best human-readable result
+        let bestResult = null;
+        for (const result of results) {
+          const formattedAddress = result.formatted_address || "";
+          if (formattedAddress.match(/^\w{4}\+\w{4}$/)) continue; // skip pure plus-code results
+          if (!bestResult || (formattedAddress && formattedAddress.length > (bestResult.formatted_address || "")))
+            bestResult = result;
+        }
+
+        if (!bestResult) {
+          if (!opts.silent) {
+            setStatus("error");
             setStatusMsg("No human-readable address found. Please try again.");
-            reject("No human-readable address found.");
-            return;
           }
-          const comp = {};
-          for (const r of bestResult.address_components || []) {
-            for (const c of r.types) if (!comp[c]) comp[c] = r.long_name;
-          }
-          const norm = (s) => (s || "").toString().toLowerCase().trim();
-          const state = norm(comp.administrative_area_level_1);
-          const admin2 = norm(comp.administrative_area_level_2);
-          const locality = norm(comp.locality);
-          const sublocality = norm(comp.sublocality);
-          const neighborhood = norm(comp.neighborhood);
-          const postalTown = norm(comp.postal_town);
-          const formatted = norm(bestResult.formatted_address);
-          const prayagrajNames = ["prayagraj", "allahabad"];
-          const cityCandidates = [locality, admin2, sublocality, neighborhood, postalTown, formatted];
-          const inUttarPradesh = state.includes("uttar pradesh") || state === "up";
-          const inPrayagraj = cityCandidates.some((n) => n && prayagrajNames.some((name) => n.includes(name)));
-          const lat = coords.lat;
-          const lng = coords.lng;
-          const prayagrajBounds = { north: 25.6, south: 25.2, west: 81.6, east: 82.0 };
-          const inBounds = lat >= prayagrajBounds.south && lat <= prayagrajBounds.north && lng >= prayagrajBounds.west && lng <= prayagrajBounds.east;
-          const finalAddress = bestResult.formatted_address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-          setTempAddss(finalAddress);
-          if ((inUttarPradesh && inPrayagraj) || inBounds) {
-            resolve(finalAddress);
+          resolve({ allowed: false, finalAddress: `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
+          return;
+        }
+
+        // extract components
+        const comp = {};
+        for (const r of bestResult.address_components || []) {
+          for (const c of r.types) if (!comp[c]) comp[c] = r.long_name;
+        }
+        const norm = (s) => (s || "").toString().toLowerCase().trim();
+        const state = norm(comp.administrative_area_level_1);
+        const admin2 = norm(comp.administrative_area_level_2);
+        const locality = norm(comp.locality);
+        const sublocality = norm(comp.sublocality);
+        const neighborhood = norm(comp.neighborhood);
+        const postalTown = norm(comp.postal_town);
+        const formatted = norm(bestResult.formatted_address);
+        const prayagrajNames = ["prayagraj", "allahabad"];
+        const cityCandidates = [locality, admin2, sublocality, neighborhood, postalTown, formatted];
+
+        const inUttarPradesh = state.includes("uttar pradesh") || state === "up";
+        const inPrayagraj = cityCandidates.some((n) => n && prayagrajNames.some((name) => n.includes(name)));
+
+        const lat = coords.lat;
+        const lng = coords.lng;
+        const prayagrajBounds = { north: 25.6, south: 25.2, west: 81.6, east: 82.0 };
+        const inBounds = lat >= prayagrajBounds.south && lat <= prayagrajBounds.north && lng >= prayagrajBounds.west && lng <= prayagrajBounds.east;
+        const finalAddress = bestResult.formatted_address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+        // Always update the temporary address text so UI shows formatted address for searches
+        try { setTempAddss(finalAddress); } catch (e) { /* ignore if unavailable */ }
+
+        const allowed = ((inUttarPradesh && inPrayagraj) || inBounds);
+
+        // IMPORTANT: only update global status/messages when NOT silent.
+        if (!opts.silent) {
+          if (allowed) {
+            setStatus("allowed");
             setStatusMsg("Location valid.");
           } else {
+            setStatus("outside");
             setStatusMsg("Selected location is outside Prayagraj. Please adjust on the map.");
-            if (opts.autoOpenMapIfOutside) setPickerStep("map");
-            reject("Location outside bounds");
+            // caller may choose to open map or redirect when outside (autoOpenMapIfOutside)
           }
-        });
+        } else {
+          // silent mode: do NOT touch global status/statusMsg or trigger navigation
+          // keep function purely as validator
+        }
+
+        resolve({ allowed, finalAddress });
       });
-    } catch (err) {
+    });
+  } catch (err) {
+    console.error("Error in checkAndSaveCoords:", err);
+    if (!opts.silent) {
+      setStatus("error");
       setStatusMsg("Error checking location. Try again.");
-      return Promise.reject(err);
     }
-  };
+    return { allowed: false, finalAddress: `${coords.lat?.toFixed?.(4) || ""}, ${coords.lng?.toFixed?.(4) || ""}` };
+  }
+};
+
 
   // Confirm button behavior: for add-new flow open the address details form, otherwise quick-save & close
-  const confirmLocation = async () => {
-    if (!selected) return setStatusMsg("No location selected.");
-    const savedAddress = tempAdds || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`;
-    const savedCoords = `${selected.lat},${selected.lng}`;
-    if (isAddingNewAddress) {
-      setAddressForm((prev) => ({ ...prev, completeAddress: savedAddress }));
-      setShowAddressForm(true);
-      return;
-    }
-    setAdss(savedAddress);
-    setTimeout(() => {
+// Confirm button behavior: for add-new flow open the address details form, otherwise quick-save & close
+const confirmLocation = async () => {
+  if (!selected) return setStatusMsg("No location selected.");
+  const savedAddress = tempAdds || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`;
+
+  // Re-validate at confirmation time to be sure (checkAndSaveCoords no longer rejects)
+  try {
+    const result = await checkAndSaveCoords({ lat: selected.lat, lng: selected.lng }, { autoOpenMapIfOutside: false });
+    // result = { allowed: boolean, finalAddress: string }
+    if (!result || result.allowed === false) {
+      // redirect to change-location flow
+      try { localStorage.setItem("pending_redirect_after_change", "1"); } catch (e) {}
       setShowMap(false);
       setPickerStep("search");
-      setStatusMsg("");
-    }, 350);
-  };
+      setStatusMsg("Selected location is outside service area. Redirecting to change location...");
+      try { localStorage.setItem("selected_coords", `${selected.lat},${selected.lng}`); } catch (e) {}
+      navigate("/change-location");
+      return;
+    }
+
+    // allowed -> persist coords
+    try { localStorage.setItem("selected_coords", `${selected.lat},${selected.lng}`); } catch (e) {}
+
+  } catch (err) {
+    // on geocoder/other error, fallback to showing map so user can pick again
+    setPickerStep("map");
+    setShowMap(true);
+    setStatusMsg("Could not validate location, please adjust on map.");
+    return;
+  }
+
+  // Now handle add-new-address vs normal confirm
+  if (isAddingNewAddress) {
+    setAddressForm((prev) => ({ ...prev, completeAddress: savedAddress }));
+    setShowAddressForm(true);
+    return;
+  }
+
+  // Normal save: update visible address and close the map
+  setAdss(savedAddress);
+
+  setTimeout(() => {
+    setShowMap(false);
+    setPickerStep("search");
+    setStatusMsg("");
+    // IF the user is currently on the change-location page, redirect home
+    try {
+      // use the react-router location object to check current path
+      if (location && location.pathname && location.pathname.startsWith("/change-location")) {
+        navigate("/");
+      }
+    } catch (e) {
+      // ignore navigation errors
+    }
+  }, 350);
+};
+
 
   function extractLocation(addss) {
     const parts = (addss || "").split(",");
@@ -427,12 +587,50 @@ function UpdateLocation() {
   };
 
   // select a saved address from list
-  const handleSelectSavedAddress = (addr) => {
-    setAdss(addr.completeAddress);
-    setShowMap(false);
-    setPickerStep("search");
-    setStatusMsg("");
-  };
+  const handleSelectSavedAddress = async (addr) => {
+  // If backend saved address includes coords, use them to persist and validate.
+  // Otherwise fall back to the address string (no coords -> cannot persist exact location).
+  if (!addr) return;
+
+  // If coords are present, validate them first (this will set status appropriately).
+  if (addr.coords && (addr.coords.lat || addr.coords.lng)) {
+    const coords = { lat: Number(addr.coords.lat), lng: Number(addr.coords.lng) };
+    try {
+      const result = await checkAndSaveCoords(coords, { autoOpenMapIfOutside: false });
+      // If allowed, persist and close map
+      if (result && result.allowed) {
+        try { localStorage.setItem("selected_coords", `${coords.lat},${coords.lng}`); } catch (e) {}
+        setAdss(result.finalAddress || addr.completeAddress);
+        setShowMap(false);
+        setPickerStep("search");
+        setStatusMsg("");
+        return;
+      } else {
+        // Not allowed -> open map so user can pick valid location or confirm
+        setSelected(coords);
+        setTempAddss(result.finalAddress || addr.completeAddress);
+        setPickerStep("map");
+        setShowMap(true);
+        return;
+      }
+    } catch (err) {
+      // fallback: show map and let user choose
+      setStatusMsg("Could not validate saved address location. Please pick or confirm on map.");
+      setSelected({ lat: addr.coords.lat, lng: addr.coords.lng });
+      setTempAddss(addr.completeAddress);
+      setPickerStep("map");
+      setShowMap(true);
+      return;
+    }
+  }
+
+  // If no coords, just set the address text (user can confirm on map or choose)
+  setAdss(addr.completeAddress);
+  setShowMap(false);
+  setPickerStep("search");
+  setStatusMsg("");
+};
+
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">

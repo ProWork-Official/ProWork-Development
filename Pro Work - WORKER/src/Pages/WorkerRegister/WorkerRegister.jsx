@@ -21,6 +21,21 @@ import { MyContext } from '../../ContextAPI'
 
 function WorkerRegister() {
   const { SessionID, WorkerFormData, ServiceFormData } = useContext(MyContext);
+
+    const handleRegisterClick = () => {
+    // Check if worker is fully registered (both worker and service forms completed)
+    if (WorkerFormData.isWorker && ServiceFormData.isService) {
+      toastFailure("You are already registered as a worker");
+      return;
+    }
+
+    // Existing logic for non-registered workers
+    if (SessionID.SessionID == undefined) {
+      setTimeout(() => { showSignUpForm() }, 800);
+    } else {
+      WorkerFormData.isWorker ? toggleServiceForm(true) : toggleWorkerForm(true);
+    }
+  };
    
 
   return (
@@ -44,15 +59,11 @@ function WorkerRegister() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <button 
-            onClick={() =>
-              SessionID.SessionID == undefined
-                ? 
-                      setTimeout(() => {  showSignUpForm() }, 800)
-                      
-                :
-             WorkerFormData.isWorker ? toggleServiceForm(true) : toggleWorkerForm(true)} className="px-6 py-3 bg-[#f2da1d] text-[#33806b] font-bold rounded-full shadow-lg hover:bg-yellow-300 transition">
-            Register Shop
-          </button>
+          onClick={handleRegisterClick}
+          className="px-6 py-3 bg-[#f2da1d] text-[#33806b] font-bold rounded-full shadow-lg hover:bg-yellow-300 transition"
+        >
+          Register Shop
+        </button>
           <button onClick={() => window.scrollTo({ top: 500, behavior: "smooth" })} className="px-6 py-3 text-gray-700 font-medium hover:underline transition">
             Learn More →
           </button>

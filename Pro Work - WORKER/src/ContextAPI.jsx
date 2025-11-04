@@ -10,11 +10,12 @@ const MyContextProvider = (props) =>{
     const [addss, setAdss] = useState("");
     const [pickerStep, setPickerStep] = useState("search");
     const [statusMsg, setStatusMsg] = useState("");
+    const [status, setStatus] = useState("checking"); // checking | allowed | denied | outside | error
 
 
     const [SendOTP, setSendOTP] = useState(false)
     const [OTP_ID, setOTP_ID] = useState('');
-    const [PhoneNumber, setPhoneNumber] = useState(null) 
+    const [PhoneNumber, setPhoneNumber] = useState('') 
 
     
     const [UserData, setUserData] = useState({ UserObjectID: "", UserNumber: "" })
@@ -56,6 +57,7 @@ const MyContextProvider = (props) =>{
         addss, setAdss,
         pickerStep, setPickerStep,
         statusMsg, setStatusMsg,
+        status, setStatus,
         
 
         SendOTP, setSendOTP,
